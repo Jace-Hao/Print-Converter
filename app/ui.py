@@ -62,8 +62,8 @@ class Panel:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title('水洗唛打印助手 - 控制面板')
-        self.root.geometry('780x580')
-        self.root.minsize(700, 500)
+        self.root.geometry('920x620')
+        self.root.minsize(820, 520)
 
         top = tk.Frame(self.root)
         top.pack(fill='x', padx=10, pady=(10, 4))
@@ -77,13 +77,14 @@ class Panel:
         self._btn(row1, '停止监视', self.on_stop)
         self._btn(row1, '打印校准唛(两版)', self.on_calibrate)
         self._btn(row1, '处理 PDF 文件...', self.on_pick_pdf)
-        self._btn(row1, '标签编辑器', self.open_editor)
+        self._btn(row1, '布局设计器', self.open_editor)
         row2 = tk.Frame(btns); row2.pack(fill='x', pady=2)
         self._btn(row2, '监视目录', lambda: self.open_dir(self.watch_dir()))
         self._btn(row2, '归档目录', lambda: self.open_dir(app_path('out', 'archive')))
         self._btn(row2, '预览目录', lambda: self.open_dir(app_path('out', 'previews')))
         self._btn(row2, '日志目录', lambda: self.open_dir(app_path('out', 'logs')))
         self._btn(row2, '使用说明', self.open_manual)
+        self._btn(row2, '虚拟打印机', self.on_vprinter)
 
         tk.Label(self.root, text='运行日志（最近 300 行）:', anchor='w').pack(fill='x', padx=10, pady=(8, 0))
         self.logbox = scrolledtext.ScrolledText(self.root, height=18, font=('Consolas', 9), wrap='none')
@@ -132,8 +133,23 @@ class Panel:
 
     def open_editor(self):
         import subprocess
-        subprocess.Popen([PYW, '-X', 'utf8', app_path('app', 'editor.py')],
+        subprocess.Popen([PYW, '-X', 'utf8', app_path('app', 'designer.py')],
                          cwd=ROOT, creationflags=CREATE_NO_WINDOW)
+
+    def on_vprinter(self):
+        try:
+            from app import vpinstall
+            st = vpinstall.status()
+        except Exception as e:
+            messagebox.showerror('错误', str(e))
+            return
+        ok = bool(st.get('port_ok')) and bool(st.get('printer_ok')) and bool(st.get('driver_ok'))
+        txt = '虚拟打印机「%s」\n端口文件: %s\n\n状态: %s' % (
+            st.get('name'), st.get('port'), '已就绪' if ok else '未就绪')
+        if ok:
+            messagebox.showinfo('虚拟打印机', txt)
+        elif messagebox.askyesno('虚拟打印机', txt + '\n\n是否现在安装/修复？（会弹出管理员确认窗口）'):
+            os.startfile(app_path('安装虚拟打印机.cmd'))
 
     # ---------- actions ----------
     def on_start(self):

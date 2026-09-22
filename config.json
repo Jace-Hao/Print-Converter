@@ -20,6 +20,25 @@
     ],
     "size_tol_mm": 3.0
   },
+  "vprinter": {
+    "name": "水洗唛打印助手",
+    "driver": "Microsoft Print To PDF"
+  },
+  "capture": {
+    "enabled": true,
+    "slot_file": "spool/capture.pdf",
+    "poll_seconds": 0.06,
+    "crop_mm": [
+      0.0,
+      0.0,
+      120.0,
+      30.0
+    ],
+    "shift_mm": [
+      2.03,
+      0.0
+    ]
+  },
   "pipeline": {
     "mode": "auto",
     "rotate_dir": "cw",
@@ -34,7 +53,9 @@
     ],
     "crop_pad_mm": 0.5,
     "crop_white": 250,
-    "align": "center"
+    "align": "center",
+    "render_mode": "rotate",
+    "layout_template": "默认"
   },
   "print": {
     "printer": "水洗唛",

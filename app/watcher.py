@@ -78,6 +78,19 @@ class Watcher:
         return (now - rec["since"]) >= need
 
     # ---------- 校验(防止误打印非标签内容) ----------
+    def _ink_box_mm(self, doc):
+        """返回首页内容外接框(毫米): (x0,y0,x1,y1), 空白页返回 None"""
+        from PIL import Image, ImageChops
+        dpi = 120
+        pix = doc[0].get_pixmap(dpi=dpi)
+        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples).convert("L")
+        bg = Image.new("L", img.size, 255)
+        bb = ImageChops.difference(img, bg).getbbox()
+        if not bb:
+            return None
+        mm = lambda v: v / dpi * 25.4
+        return (mm(bb[0]), mm(bb[1]), mm(bb[2]), mm(bb[3]))
+
     def _validate(self, path):
         v = self.cfg.get("validate") or {}
         if not v.get("enabled", True):
@@ -85,13 +98,28 @@ class Watcher:
         try:
             import pymupdf
             doc = pymupdf.open(path)
-            n = len(doc)
-            if n < 1:
+            if len(doc) < 1:
                 doc.close()
                 return False, "无页面"
             r = doc[0].rect
             w_mm = r.width / 72.0 * 25.4
             h_mm = r.height / 72.0 * 25.4
+            # 虚拟打印机捕获页(大页面): 内容应位于标签截取区域内
+            if min(w_mm, h_mm) > 140.0:   # 与 render.CAPTURE_MIN_EDGE_MM 一致
+                cap = self.cfg.get("capture") or {}
+                crop = cap.get("crop_mm") or [0.0, 0.0, 120.0, 30.0]
+                box = self._ink_box_mm(doc)
+                doc.close()
+                if box is None:
+                    return False, "捕获页空白"
+                x0, y0, x1, y1 = box
+                cw_mm = crop[2] - crop[0]
+                ch_mm = crop[3] - crop[1]
+                tol = 1.5
+                ok = (x0 >= crop[0] - tol and y0 >= crop[1] - tol
+                      and x1 <= crop[0] + cw_mm + tol and y1 <= crop[1] + ch_mm + tol)
+                why = "capture %.0fx%.0fmm ink=%.1f,%.1f-%.1f,%.1f" % (w_mm, h_mm, x0, y0, x1, y1)
+                return ok, why
             doc.close()
         except Exception as e:
             return False, "无法解析: %s" % e
@@ -162,8 +190,26 @@ class Watcher:
             self._save()
         return acted
 
+    def _process_slot_file(self, path):
+        """处理一个虚拟打印机捕获文件(已由 SlotWatcher 复制到 spool/jobs)"""
+        ok, why = self._validate(path)
+        if not ok:
+            self._hold(path, why)
+            return
+        dry = self.cfg["automation"].get("mode") == "dry_run"
+        res = process_pdf(self.cfg, self.log, path, dry_run=dry)
+        self._maybe_close_windows()
+        self.log.info("完成(虚拟打印机): %s -> %s 个标签", os.path.basename(path), len(res.get("labels", [])))
+
     def run(self, once=False):
         self.log.info("监视启动: %s", " , ".join(self.cfg["watch"]["dirs"]))
+        if not once:
+            try:
+                from .capture import SlotWatcher
+                self.slot = SlotWatcher(self.cfg, self.log, self._process_slot_file)
+                self.slot.start()
+            except Exception as e:
+                self.log.exception("文件槽捕获启动失败: %s", e)
         while True:
             try:
                 self.scan_once()

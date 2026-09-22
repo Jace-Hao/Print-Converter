@@ -8,18 +8,40 @@ import pymupdf
 from PIL import Image, ImageChops
 
 
-def render_pdf_pages(pdf_path, dpi):
-    """渲染 PDF 每页为 PIL 图像, 返回 [{img, w_mm, h_mm}]"""
+CAPTURE_MIN_EDGE_MM = 140.0   # 页面短边超过该值 → 视为"虚拟打印机捕获页"
+
+
+def render_pdf_pages(pdf_path, dpi, capture_crop=None, capture_shift=(0.0, 0.0)):
+    """渲染 PDF 每页为 PIL 图像, 返回 [{img, w_mm, h_mm, captured}]。
+
+    capture_crop: (x0,y0,x1,y1) 毫米。当某页明显大于标签纸时(虚拟打印机捕获到的
+    整页打印文件, 标签内容位于页面左上角), 只渲染该区域并按 capture_shift 平移,
+    以对齐旧版式。
+    """
     doc = pymupdf.open(pdf_path)
     pages = []
     for page in doc:
-        pix = page.get_pixmap(dpi=dpi)
-        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-        pages.append({
-            "img": img,
-            "w_mm": page.rect.width / 72.0 * 25.4,
-            "h_mm": page.rect.height / 72.0 * 25.4,
-        })
+        w_mm = page.rect.width / 72.0 * 25.4
+        h_mm = page.rect.height / 72.0 * 25.4
+        captured = False
+        if capture_crop and min(w_mm, h_mm) > CAPTURE_MIN_EDGE_MM:
+            x0, y0, x1, y1 = capture_crop
+            clip = pymupdf.Rect(x0 / 25.4 * 72, y0 / 25.4 * 72, x1 / 25.4 * 72, y1 / 25.4 * 72)
+            clip = clip & page.rect
+            pix = page.get_pixmap(dpi=dpi, clip=clip)
+            img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+            sx = int(round(capture_shift[0] / 25.4 * dpi))
+            sy = int(round(capture_shift[1] / 25.4 * dpi))
+            if sx or sy:
+                shifted = Image.new("RGB", img.size, "white")
+                shifted.paste(img, (sx, sy))
+                img = shifted
+            w_mm, h_mm = (x1 - x0), (y1 - y0)
+            captured = True
+        else:
+            pix = page.get_pixmap(dpi=dpi)
+            img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+        pages.append({"img": img, "w_mm": w_mm, "h_mm": h_mm, "captured": captured})
     doc.close()
     return pages
 

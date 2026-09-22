@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>水洗唛打印助手 · 使用说明与交付报告</title>
-<meta name="description" content="洗衣管家水洗唛自动旋转打印工具——使用说明与交付报告（v1.0）">
+<meta name="description" content="洗衣管家水洗唛自动旋转打印工具——使用说明与交付报告（v2.0）">
 <style>
   :root{
     --bg:#FAF8F4;
@@ -156,14 +156,14 @@
 <div class="page">
 
   <header class="cover">
-    <p class="kicker">Wash Label Print Assistant · v1.0</p>
+    <p class="kicker">Wash Label Print Assistant · v2.0</p>
     <h1>水洗唛打印助手</h1>
     <p class="sub">使用说明与交付报告</p>
     <hr class="rule-accent">
     <dl class="cover-meta">
       <div><dt>交付对象</dt><dd>星期衣精致洗衣 · 门店工作机</dd></div>
       <div><dt>交付日期</dt><dd>2026 年 9 月 22 日</dd></div>
-      <div><dt>工具版本</dt><dd>v1.0（Python 3.14）</dd></div>
+      <div><dt>工具版本</dt><dd>v2.0（Python 3.14）</dd></div>
       <div><dt>部署位置</dt><dd>E:\软件开发\水洗唛打印助手</dd></div>
     </dl>
   </header>
@@ -180,7 +180,7 @@
         <li><a href="#s6"><span class="no">06</span>目录与文件说明</a></li>
         <li><a href="#s7"><span class="no">07</span>常见问题</a></li>
         <li><a href="#s8"><span class="no">08</span>已知限制与注意事项</a></li>
-        <li><a href="#s9"><span class="no">09</span>标签内容编辑器（初版）</a></li>
+        <li><a href="#s9"><span class="no">09</span>虚拟打印机与布局设计器</a></li>
       </ol>
     </nav>
 
@@ -189,29 +189,30 @@
       <section id="s1">
         <h2><span class="no">01</span>交付概述</h2>
         <p>本报告面向「星期衣精致洗衣」门店的水洗唛打印场景：洗衣管家打印出的水洗唛为 120×30 毫米横版版面，而门店标签机（佳博 GP-9134T）按 30×120 毫米竖版出纸。此前每张标签都需要人工「另存 PDF → 旋转 → 再打印」，步骤繁琐且容易出错。</p>
-        <p>「水洗唛打印助手」v1.0 已完成开发并通过全链路实测：门店保持原有打印习惯（打印时选择「水洗唛转换」），工具在后台自动完成 捕获 → 旋转排版 → 送印 → 归档 全流程，无需任何额外操作。</p>
+        <p>「水洗唛打印助手」v2.0 已完成开发并通过全链路实测。本版本按现场反馈进行了架构升级：由工具自建一台专属虚拟打印机「水洗唛打印助手」，打印任务不再经过第三方虚拟打印机，直接进入工具完成转换并输出；同时新增「布局设计器」，水洗唛的版面布局可以自由设计。</p>
         <div class="table-wrap">
           <table>
             <caption>表 1　交付成果清单</caption>
             <thead><tr><th style="width:18%">成果</th><th style="width:45%">内容</th><th>位置</th></tr></thead>
             <tbody>
-              <tr><td>自动打印工具</td><td>监视捕获、旋转、送印、归档、日志</td><td><code>E:\软件开发\水洗唛打印助手</code></td></tr>
-              <tr><td>控制面板</td><td>一键启停、测试打印、查看日志与目录</td><td><code>打开控制面板.cmd</code></td></tr>
+              <tr><td>自动打印工具</td><td>虚拟打印机捕获、截取对齐、旋转、送印、归档、日志</td><td><code>E:\软件开发\水洗唛打印助手</code></td></tr>
+              <tr><td>专属虚拟打印机</td><td>「水洗唛打印助手」：由工具创建与管理，打印任务自动写入捕获文件</td><td><code>安装虚拟打印机.cmd</code> / <code>卸载虚拟打印机.cmd</code></td></tr>
+              <tr><td>布局设计器</td><td>自由设计水洗唛版面（文本/条码/线条），可打印与启用自动重排</td><td><code>打开布局设计器.cmd</code></td></tr>
+              <tr><td>控制面板</td><td>一键启停、测试打印、查看日志与目录、虚拟打印机状态</td><td><code>打开控制面板.cmd</code></td></tr>
               <tr><td>操作脚本</td><td>启动/停止监视、校准打印、开机自启安装等</td><td>工具目录（根目录）</td></tr>
-              <tr><td>标签内容编辑器</td><td>识别打印数据、编辑字段、预览并打印自定义标签</td><td><code>打开标签编辑器.cmd</code></td></tr>
               <tr><td>使用说明（本文）</td><td>原理、操作、校准、常见问题</td><td><code>使用说明与交付报告.docx</code> / <code>使用说明.html</code></td></tr>
             </tbody>
           </table>
         </div>
-        <p>截至 2026 年 9 月 22 日，核心功能全部实测通过（详见第 5 章）；旋转方向默认采用「顺时针」，并已提供两版校准唛供现场比对，确认后即为最终配置。</p>
+        <p>截至 2026 年 9 月 22 日，v2.0 核心功能全部实测通过（详见第 5 章）：虚拟打印机的创建、高速捕获（连续打印无丢失）、真实样例版面对齐、物理出纸烟测均已完成；旋转方向默认采用「顺时针」，并已提供两版校准唛供现场比对，确认后即为最终配置。</p>
       </section>
 
       <section id="s2">
         <h2><span class="no">02</span>背景与方案设计</h2>
         <h3>2.1　原有流程的问题</h3>
-        <p>原流程需要人工执行四个步骤：打印预览、另存为 PDF、旋转 90 度、再发送到标签机。存在三个问题：一是操作繁琐，每张标签都要重复；二是旋转依靠人工判断，容易方向出错；三是中间 PDF 分散各处，日后补打、对账不便。</p>
-        <h3>2.2　自动化方案</h3>
-        <p>工具采用「旁路捕获」思路：不修改洗衣管家本体，而是利用 pdfFactory 虚拟打印机的自动保存能力——每次打印到「水洗唛转换」后，PDF 会自动、静默地保存到指定目录；工具监视该目录，发现新文件后自动完成旋转、排版与送印。</p>
+        <p>原流程需要人工执行四个步骤：打印预览、另存为 PDF、旋转 90 度、再发送到标签机。存在三个问题：一是操作繁琐，每张标签都要重复；二是旋转依靠人工判断，容易方向出错；三是中间 PDF 分散各处，日后补打、对账不便。v1.0 曾借助第三方虚拟打印机的自动保存目录完成捕获，但依赖外部软件（pdfFactory）的配置，链路较长。</p>
+        <h3>2.2　自动化方案（v2.0 架构）</h3>
+        <p>工具升级为「自建虚拟打印机」架构：由工具创建一台专属虚拟打印机「水洗唛打印助手」（基于 Windows 内置的 Microsoft Print To PDF 驱动 + 文件端口）。洗衣管家打印水洗唛时选择该打印机，打印任务会被静默写成一个捕获文件；工具以高频监视捕获文件的每个新版本，自动完成 截取标签区域 → 版面对齐 → 旋转排版 → 送印 → 归档 全流程。整个过程不再经过 pdfFactory 等第三方软件，链路更短、更稳定。</p>
         <figure>
           <svg viewBox="0 0 960 132" role="img" aria-label="自动化处理链路：打印水洗唛→PDF自动保存→监视捕获→旋转90度排版→送印→自动归档" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -223,19 +224,19 @@
               <g>
                 <rect x="1" y="26" width="140" height="64" fill="none" stroke="#CFC7B8" stroke-width="1.2"/>
                 <text x="71" y="54" text-anchor="middle" font-size="14.5" fill="#1F1D1A">打印水洗唛</text>
-                <text x="71" y="75" text-anchor="middle" font-size="11.5" fill="#6E675D">选择「水洗唛转换」</text>
+                <text x="71" y="75" text-anchor="middle" font-size="11.5" fill="#6E675D">选择「水洗唛打印助手」</text>
               </g>
               <line x1="146" y1="58" x2="166" y2="58" stroke="#9A9386" stroke-width="1.2" marker-end="url(#arr)"/>
               <g>
                 <rect x="171" y="26" width="140" height="64" fill="none" stroke="#CFC7B8" stroke-width="1.2"/>
-                <text x="241" y="54" text-anchor="middle" font-size="14.5" fill="#1F1D1A">PDF 自动保存</text>
-                <text x="241" y="75" text-anchor="middle" font-size="11.5" fill="#6E675D">静默写入，无需操作</text>
+                <text x="241" y="54" text-anchor="middle" font-size="14.5" fill="#1F1D1A">捕获文件写入</text>
+                <text x="241" y="75" text-anchor="middle" font-size="11.5" fill="#6E675D">静默、无需操作</text>
               </g>
               <line x1="316" y1="58" x2="336" y2="58" stroke="#9A9386" stroke-width="1.2" marker-end="url(#arr)"/>
               <g>
                 <rect x="341" y="26" width="140" height="64" fill="none" stroke="#CFC7B8" stroke-width="1.2"/>
-                <text x="411" y="54" text-anchor="middle" font-size="14.5" fill="#1F1D1A">监视捕获</text>
-                <text x="411" y="75" text-anchor="middle" font-size="11.5" fill="#6E675D">新文件自动检测</text>
+                <text x="411" y="54" text-anchor="middle" font-size="14.5" fill="#1F1D1A">高速捕获</text>
+                <text x="411" y="75" text-anchor="middle" font-size="11.5" fill="#6E675D">新版本即时抓取，连打不丢</text>
               </g>
               <line x1="486" y1="58" x2="506" y2="58" stroke="#9A9386" stroke-width="1.2" marker-end="url(#arr)"/>
               <g>
@@ -261,8 +262,9 @@
         </figure>
         <h3>2.3　关键设计决策</h3>
         <ul class="plain">
-          <li><b>不侵入原则</b>——不改造洗衣管家、不修改其业务数据，只使用打印链路；相关设置已备份，可随时回退。</li>
-          <li><b>安全闸</b>——只自动处理尺寸符合标签比例（120×30 毫米）的文件；不符合的文件（如 A4 文档）会被移入 <code>out\hold</code> 目录待人工确认，避免误打。</li>
+          <li><b>不侵入原则</b>——不改造洗衣管家、不修改其业务数据，只新增一台打印设备并使用打印链路；洗衣管家配置改动前均已备份，可随时回退。</li>
+          <li><b>自建虚拟打印机</b>——打印机由工具安装脚本创建（约 10 秒，需管理员确认一次），日常无需任何维护；可随时用卸载脚本移除。</li>
+          <li><b>安全闸</b>——只自动处理内容位于标签区域内的捕获文件；不符合的文件（如整页文档）会被移入 <code>out\hold</code> 目录待人工确认，避免误打。</li>
           <li><b>可追溯</b>——每个标签自动归档 PDF 原件与位图预览，补打、对账、复查都方便。</li>
           <li><b>默认全自动</b>——捕获成功即自动送印；如需「先预览再打印」，可将自动化模式切换为 <code>dry_run</code>（只预览不打印）。</li>
         </ul>
@@ -272,9 +274,10 @@
         <h2><span class="no">03</span>快速上手</h2>
         <h3>3.1　日常三步</h3>
         <ol class="steps">
+          <li>确认虚拟打印机已就绪：打开控制面板点击「虚拟打印机」查看状态（本机已安装；如被删除，双击「安装虚拟打印机.cmd」重新安装）。</li>
           <li>双击「启动监视.cmd」启动后台监视（保持窗口开着；关闭窗口即停止监视）。</li>
-          <li>照常打印水洗唛：打印时选择「水洗唛转换」。</li>
-          <li>完成：工具自动旋转并打印到「水洗唛」，同时归档。</li>
+          <li>照常打印水洗唛：打印时选择「水洗唛打印助手」。</li>
+          <li>完成：工具自动截取、旋转并打印到「水洗唛」，同时归档。</li>
         </ol>
         <h3>3.2　控制面板</h3>
         <p>如果不习惯命令行窗口，可双击「打开控制面板.cmd」使用图形面板：</p>
@@ -286,14 +289,15 @@
               <tr><td>启动监视 / 停止监视</td><td>打开或停止后台监视进程</td></tr>
               <tr><td>打印校准唛（两版）</td><td>打印顺时针、逆时针两版校准标签</td></tr>
               <tr><td>处理 PDF 文件…</td><td>手动选择一个 PDF 进行旋转打印</td></tr>
-              <tr><td>标签编辑器</td><td>打开标签内容编辑器（识别 → 编辑 → 预览 → 打印）</td></tr>
+              <tr><td>布局设计器</td><td>打开布局设计器（设计版面 → 预览 → 打印）</td></tr>
+              <tr><td>虚拟打印机</td><td>查看虚拟打印机状态；未就绪可一键安装/修复</td></tr>
               <tr><td>监视目录 / 归档目录 / 预览目录 / 日志目录</td><td>一键打开对应文件夹</td></tr>
               <tr><td>使用说明</td><td>打开本文档的 HTML 版本</td></tr>
             </tbody>
           </table>
         </div>
         <h3>3.3　第一次使用建议</h3>
-        <p>建议先手动打印一张真实水洗唛试跑：确认标签方向、内容完整性后，再进入日常使用。若方向与预期相反，按第 4 章切换旋转方向即可。</p>
+        <p>建议先手动打印一张真实水洗唛试跑：确认标签方向、内容完整性后，再进入日常使用。若方向与预期相反，按第 4 章切换旋转方向即可。测试期间打印的测试唛（含校准唛）内容均为样例数据，可直接丢弃。</p>
       </section>
 
       <section id="s4">
@@ -314,12 +318,24 @@
               <tr><td><code>pipeline.crop_pad_mm</code></td><td>0.5</td><td>内容裁剪留边（毫米）</td></tr>
               <tr><td><code>print.printer</code></td><td>水洗唛</td><td>目标标签机名称</td></tr>
               <tr><td><code>print.dither</code></td><td>true</td><td>灰度抖动；如文字发虚可改为 false</td></tr>
+              <tr><td><code>capture.slot_file</code></td><td>spool\capture.pdf</td><td>虚拟打印机捕获文件位置（勿改）</td></tr>
+              <tr><td><code>capture.crop_mm</code></td><td>[0, 0, 120, 30]</td><td>从捕获页左上角截取的标签区域（毫米）</td></tr>
+              <tr><td><code>capture.shift_mm</code></td><td>[2.03, 0]</td><td>版面对齐微调（对齐旧版式，一般勿改）</td></tr>
+              <tr><td><code>pipeline.render_mode</code></td><td>rotate</td><td>rotate 原样旋转；layout 按布局设计器模板重排</td></tr>
+              <tr><td><code>pipeline.layout_template</code></td><td>默认</td><td>layout 模式使用的模板名</td></tr>
               <tr><td><code>automation.mode</code></td><td>auto</td><td>auto 自动打印；dry_run 只预览不打印</td></tr>
-              <tr><td><code>automation.close_pdffactory_window</code></td><td>true</td><td>处理完成后自动关闭 pdfFactory 弹出窗口</td></tr>
             </tbody>
           </table>
         </div>
         <p>配置文件位于工具目录根下（<code>config.json</code>），可用记事本编辑；修改后重启监视生效。</p>
+        <h3>4.3　虚拟打印机维护</h3>
+        <p>虚拟打印机「水洗唛打印助手」由工具创建和管理：</p>
+        <ul class="plain">
+          <li><b>状态检查</b>——控制面板 →「虚拟打印机」，查看端口与设备状态。</li>
+          <li><b>安装/修复</b>——双击「安装虚拟打印机.cmd」（会请求一次管理员确认），可重复运行。</li>
+          <li><b>卸载</b>——双击「卸载虚拟打印机.cmd」，移除虚拟打印机与端口（不影响标签机与洗衣管家）。</li>
+          <li><b>说明</b>——虚拟打印机基于 Windows 内置 PDF 驱动，不额外安装任何软件；打印任务写入 <code>spool\capture.pdf</code> 捕获文件，由工具实时读取。</li>
+        </ul>
       </section>
 
       <section id="s5">
@@ -332,10 +348,10 @@
             <tbody>
               <tr><td>门店工作机</td><td>Windows 11（xqyjzxy）</td></tr>
               <tr><td>洗衣管家</td><td>单机版 v6.1.23</td></tr>
-              <tr><td>虚拟打印机</td><td>pdfFactory 8.31（水洗唛转换）</td></tr>
+              <tr><td>虚拟打印机</td><td>「水洗唛打印助手」（工具自建：Microsoft Print To PDF 驱动 + 文件端口）</td></tr>
               <tr><td>标签打印机</td><td>佳博 GP-9134T（水洗唛，300 dpi）</td></tr>
               <tr><td>标签规格</td><td>30×120 毫米竖版（设计版面 120×30 毫米横版）</td></tr>
-              <tr><td>工具版本</td><td>v1.0（Python 3.14）</td></tr>
+              <tr><td>工具版本</td><td>v2.0（Python 3.14）</td></tr>
             </tbody>
           </table>
         </div>
@@ -345,17 +361,20 @@
             <caption>表 5　测试记录</caption>
             <thead><tr><th style="width:8%">序号</th><th style="width:17%">测试项目</th><th style="width:43%">方法</th><th>结果</th></tr></thead>
             <tbody>
-              <tr><td class="num">1</td><td>捕获链路</td><td>打印测试页到「水洗唛转换」，检查 PDF 自动落盘</td><td>通过（无弹窗、静默保存）</td></tr>
-              <tr><td class="num">2</td><td>连打合并</td><td>快速连续发起 2 笔打印任务</td><td>通过（合并为 1 个 2 页 PDF，逐页处理）</td></tr>
-              <tr><td class="num">3</td><td>旋转与排版</td><td>干跑模式生成标签位图并检查尺寸</td><td>通过（30×120 毫米 @ 300 dpi，尺寸精确）</td></tr>
-              <tr><td class="num">4</td><td>物理打样</td><td>打印两版校准唛（顺时针 / 逆时针）</td><td>通过（标签机实际出纸）</td></tr>
-              <tr><td class="num">5</td><td>端到端全链路</td><td>打印 → 捕获 → 旋转 → 送印 → 归档 → 关窗</td><td>通过（5 个任务、7 张标签全自动完成）</td></tr>
+              <tr><td class="num">1</td><td>虚拟打印机创建</td><td>执行安装脚本创建「水洗唛打印助手」并检查端口/驱动</td><td>通过（约 10 秒完成，可重复运行）</td></tr>
+              <tr><td class="num">2</td><td>捕获链路</td><td>打印测试页到「水洗唛打印助手」，检查捕获文件落盘</td><td>通过（静默写入，无弹窗）</td></tr>
+              <tr><td class="num">3</td><td>连打抗丢失</td><td>瞬间连续发起 3 笔打印任务 × 3 轮</td><td>通过（9/9 全部捕获，逐张处理）</td></tr>
+              <tr><td class="num">4</td><td>版面对齐</td><td>真实样例经新链路与旧版式逐像素比对</td><td>通过（位置偏差 ≤1 像素；对齐补偿生效）</td></tr>
+              <tr><td class="num">5</td><td>旋转与排版</td><td>干跑模式生成标签位图并检查尺寸</td><td>通过（30×120 毫米 @ 300 dpi，尺寸精确）</td></tr>
+              <tr><td class="num">6</td><td>安全闸</td><td>读取干扰页面（整页文档）测试校验</td><td>通过（正确拦下并转存 out\hold）</td></tr>
+              <tr><td class="num">7</td><td>物理烟测</td><td>真实样例经全链路打印实体标签一张</td><td>通过（标签机实际出纸，边距与原版式一致）</td></tr>
+              <tr><td class="num">8</td><td>界面自检</td><td>控制面板、布局设计器窗口冒烟</td><td>通过（窗口正常打开，无报错）</td></tr>
             </tbody>
           </table>
         </div>
         <h3>5.3　待确认事项与验收结论</h3>
-        <p><b>待确认事项</b>：旋转方向需现场目检两张校准唛后最终确认（默认顺时针）；其余配置均无需调整。测试期间共打印若干测试唛（内容均为测试数据，可直接丢弃）。</p>
-        <p><b>验收结论</b>：除上述方向目检外，全部验收项均已通过，工具具备投入日常使用的条件。</p>
+        <p><b>待确认事项</b>：① 旋转方向需现场目检两张校准唛后最终确认（默认顺时针）；② 洗衣管家打印设备已指向「水洗唛打印助手」，建议下一次实际打印时留意首张标签（必要时重启一次洗衣管家）。测试期间打印的测试唛内容均为样例数据，可直接丢弃。</p>
+        <p><b>验收结论</b>：除上述现场目检外，v2.0 全部验收项均已通过，工具具备投入日常使用的条件。</p>
       </section>
 
       <section id="s6">
@@ -366,13 +385,16 @@
             <thead><tr><th style="width:24%">名称</th><th>说明</th></tr></thead>
             <tbody>
               <tr><td>工具主目录</td><td><code>E:\软件开发\水洗唛打印助手</code></td></tr>
-              <tr><td><code>app\</code></td><td>程序代码（watcher 监视引擎、cli 命令行、ui 控制面板等）</td></tr>
+              <tr><td><code>app\</code></td><td>程序代码（watcher 监视引擎、capture 捕获器、layout 布局引擎、cli 命令行、ui 控制面板、designer 布局设计器）</td></tr>
               <tr><td><code>out\archive\</code></td><td>归档：每个标签的 PDF 原件（补打用）</td></tr>
               <tr><td><code>out\previews\</code></td><td>预览：处理后的标签位图</td></tr>
               <tr><td><code>out\logs\</code></td><td>运行日志（排查问题先看这里）</td></tr>
               <tr><td><code>inbox\</code></td><td>手动投递目录：放入 PDF 会被自动处理</td></tr>
+              <tr><td><code>spool\</code></td><td>虚拟打印机捕获文件与作业暂存（运行数据）</td></tr>
+              <tr><td><code>templates\</code></td><td>布局模板（布局设计器保存的位置）</td></tr>
               <tr><td><code>config.json</code></td><td>配置文件（旋转方向、偏移、监视目录等）</td></tr>
-              <tr><td><code>打开标签编辑器.cmd</code></td><td>标签内容编辑器入口（识别 → 编辑 → 预览 → 打印）</td></tr>
+              <tr><td><code>安装虚拟打印机.cmd</code> / <code>卸载虚拟打印机.cmd</code></td><td>创建/移除虚拟打印机「水洗唛打印助手」（需管理员确认一次）</td></tr>
+              <tr><td><code>打开布局设计器.cmd</code></td><td>布局设计器入口（设计 → 预览 → 打印）</td></tr>
             </tbody>
           </table>
         </div>
@@ -381,12 +403,13 @@
       <section id="s7">
         <h2><span class="no">07</span>常见问题</h2>
         <div class="faq">
-          <div class="qa"><p class="q">打印后没有自动出标签？</p><p class="a">检查「启动监视」窗口是否仍在运行；查看 <code>out\logs</code> 当天日志。</p></div>
-          <div class="qa"><p class="q">屏幕上弹出了 pdfFactory 窗口？</p><p class="a">正常现象，工具处理完成后会自动关闭；无需手动操作。</p></div>
+          <div class="qa"><p class="q">打印后没有自动出标签？</p><p class="a">检查打印时选择的打印机是否为「水洗唛打印助手」，以及「启动监视」是否仍在运行；并查看 <code>out\logs</code> 当天日志。</p></div>
+          <div class="qa"><p class="q">「水洗唛打印助手」打印机不见了？</p><p class="a">双击「安装虚拟打印机.cmd」重新安装（约 10 秒）；或打开控制面板点「虚拟打印机」查看状态。</p></div>
           <div class="qa"><p class="q">想暂停自动处理？</p><p class="a">关闭「启动监视」窗口，或在控制面板点击「停止监视」。</p></div>
           <div class="qa"><p class="q">标签打印出来方向不对？</p><p class="a">见 4.1 节：切换 <code>rotate_dir</code> 后重新启动监视。</p></div>
+          <div class="qa"><p class="q">想改水洗唛的版面布局？</p><p class="a">双击「打开布局设计器.cmd」自由排版；满意后勾选「用于自动打印」，之后每张标签按你的布局重排（识别失败会自动回退为原样旋转）。</p></div>
           <div class="qa"><p class="q">有旧标签需要补打？</p><p class="a">在 <code>out\archive</code> 找到对应 PDF，拖到「把PDF拖到这里处理.cmd」上即可。</p></div>
-          <div class="qa"><p class="q">某些 PDF 没有自动打印？</p><p class="a">尺寸不符合标签比例的文件会被安全闸拦下（移入 <code>out\hold</code>），防止误打。</p></div>
+          <div class="qa"><p class="q">某些打印内容没有自动输出？</p><p class="a">内容不在标签区域内的文件会被安全闸拦下（移入 <code>out\hold</code>），防止误打。</p></div>
           <div class="qa"><p class="q">电脑重启后需要手动启动吗？</p><p class="a">默认需要；运行一次「安装开机自启.ps1」即可随登录自动运行。</p></div>
           <div class="qa"><p class="q">会不会影响洗衣管家？</p><p class="a">不会。工具不修改洗衣管家程序与数据，仅使用打印链路。</p></div>
         </div>
@@ -395,25 +418,37 @@
       <section id="s8">
         <h2><span class="no">08</span>已知限制与注意事项</h2>
         <ul class="plain">
-          <li>pdfFactory 自动保存目录为固定默认位置（经实测无法自定义到其他目录），工具已按该位置配置监听；请勿随意改动该目录内正在生成的文件。</li>
-          <li>旧打印机「水洗唛自动转换」已失效并从系统移除，与本方案无关；本工具不依赖它。</li>
+          <li>虚拟打印机「水洗唛打印助手」基于系统内置驱动，无需额外软件；安装/修复/卸载均通过脚本一键完成。</li>
+          <li>旧通道（pdfFactory「水洗唛转换」自动保存目录）仍被工具兼容监听，作为兜底；如从旧地址打印，同样会被自动处理。</li>
+          <li>捕获文件为「最近一次任务」覆盖写入；工具以高频监视抓取每个新任务，连续打印已实测无丢失；极端场景可对照归档记录补打。</li>
           <li>工具默认不随开机启动；需要时运行「安装开机自启.ps1」，可随时用「卸载开机自启.ps1」撤销。</li>
           <li>正式启用前，请先完成旋转方向目检（见第 4 章）；确认无误即完成全部验收。</li>
         </ul>
       </section>
 
       <section id="s9">
-        <h2><span class="no">09</span>标签内容编辑器（初版）</h2>
-        <p>除自动旋转打印外，工具附带一个「标签内容编辑器」，用于临时调整或自制标签内容：打开后可从最近一次打印数据中自动识别字段（单号、客户、衣物名称、颜色、件数、品牌、损坏说明、服务项目、门店名、条码号），逐项修改后即时预览，并可一键打印到标签机。</p>
-        <p>使用方式：双击「打开标签编辑器.cmd」，或通过控制面板的「标签编辑器」按钮打开；适用于需要临时补充说明、修改个别字段或补打特殊标签的场景。识别结果可直接手工修正；打印前建议先核对预览。</p>
-        <p>后续计划：编辑器将持续根据实际使用反馈打磨；其余增强想法（如批量编辑、模板保存）视需要进一步推进。本工具已达到「日常可用、自动运行、可追溯、可回退」的交付标准。使用中如遇问题，请先查阅第 7 章与 <code>out\logs</code> 日志，再行反馈处理。</p>
+        <h2><span class="no">09</span>虚拟打印机与布局设计器</h2>
+        <h3>9.1　虚拟打印机（自建）</h3>
+        <p>工具创建专属虚拟打印机「水洗唛打印助手」，它是整套自动打印的入口：洗衣管家打印水洗唛时选择它，任务即被写入捕获文件，由工具自动转换并输出到标签机。安装、修复、卸载均为一键脚本，日常无需维护；控制面板内可随时查看状态（详见 4.3 节）。</p>
+        <h3>9.2　布局设计器</h3>
+        <p>双击「打开布局设计器.cmd」即可自由设计水洗唛版面：</p>
+        <ul class="plain">
+          <li><b>元素</b>——文本（支持 <code>{字段}</code> 占位，如 <code>{客户}</code>、<code>{单号}</code>）、条码（默认绑定条码号）、线条；可任意增删、拖动、微调。</li>
+          <li><b>排版</b>——拖动移动、方向键微调（Shift 为精细模式）、0.5 毫米吸附；属性面板可设置字号（毫米）、加粗、对齐方式。</li>
+          <li><b>数据</b>——「识别最近打印」自动读取最近一次打印数据；也可手工编辑或使用示例数据预览。</li>
+          <li><b>预览</b>——左为横版设计、右为竖版打印效果（与标签机实际输出一致）。</li>
+          <li><b>模板</b>——可保存多套模板（保存在 <code>templates\</code> 目录），随时切换、另存、删除。</li>
+          <li><b>打印</b>——「打印测试」直接按当前布局打印一张水洗唛。</li>
+          <li><b>用于自动打印</b>——勾选后，之后每张标签都会按该布局重排后打印（识别失败时自动回退为原样旋转，确保不出错）。</li>
+        </ul>
+        <div class="note"><b>建议：</b>先不改自动打印，等布局在「打印测试」中确认满意后，再勾选「用于自动打印」。任何时间取消勾选即可恢复原样旋转。</div>
       </section>
 
     </main>
   </div>
 
   <footer class="colophon">
-    <p>水洗唛打印助手 · 使用说明与交付报告 · v1.0 · 2026 年 9 月 22 日 — 本文件为单文件 HTML，可直接双击打开或打印；同内容 Word 版本见《使用说明与交付报告.docx》。</p>
+    <p>水洗唛打印助手 · 使用说明与交付报告 · v2.0 · 2026 年 9 月 22 日 — 本文件为单文件 HTML，可直接双击打开或打印；同内容 Word 版本见《使用说明与交付报告.docx》。</p>
   </footer>
 
 </div>

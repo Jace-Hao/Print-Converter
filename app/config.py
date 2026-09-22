@@ -21,6 +21,17 @@ DEFAULTS = {
         "aspect_range": [3.2, 4.6],   # 近似横版标签的比例范围
         "size_tol_mm": 3.0,
     },
+    "vprinter": {                     # 工具自建虚拟打印机(安装虚拟打印机.cmd 创建)
+        "name": "水洗唛打印助手",
+        "driver": "Microsoft Print To PDF",
+    },
+    "capture": {                      # 虚拟打印机"文件槽"捕获
+        "enabled": True,
+        "slot_file": "spool\\capture.pdf",  # 虚拟打印机的固定输出文件(由文件端口写入)
+        "poll_seconds": 0.06,               # 轮询间隔(连打防丢)
+        "crop_mm": [0.0, 0.0, 120.0, 30.0], # 从捕获页左上角截取标签设计区域
+        "shift_mm": [2.03, 0.0],            # 对齐旧版式(补偿旧打印机可打印区原点差)
+    },
     "pipeline": {
         "mode": "auto",               # auto | exact | crop | fit
         "rotate_dir": "cw",           # cw(顺时针90°) | ccw(逆时针90°)
@@ -30,6 +41,8 @@ DEFAULTS = {
         "crop_pad_mm": 0.5,           # 裁剪内容时的留边
         "crop_white": 250,            # 判定“白”的灰度阈值
         "align": "center",            # center | top | bottom | left | right
+        "render_mode": "rotate",      # rotate=原样旋转 | layout=按布局模板重排
+        "layout_template": "默认",     # layout 模式使用的模板名(templates/*.json)
     },
     "print": {
         "printer": "水洗唛",           # 目标打印机(GP-9134T)
