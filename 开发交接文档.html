@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>水洗唛打印助手 · 开发交接文档</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --surface:#fbfaf7; --ink:#17181a; --soft:#3b3a37;
+    --muted:#6f6b64; --faint:#9d988e;
+    --line:#d9d6cf; --line-strong:#b9b4aa; --accent:#205c4f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:400 15.5px/1.75 "Microsoft YaHei","PingFang SC","Noto Sans CJK SC","Source Han Sans SC",sans-serif;
+  }
+  .wrap{max-width:1280px; margin:0 auto; padding:0 48px 88px}
+  header.top{padding:68px 0 36px; border-bottom:1px solid var(--line-strong)}
+  .kicker{font:600 12px/1.4 "Cascadia Mono","Consolas","Courier New",monospace; letter-spacing:.14em; color:var(--muted); text-transform:uppercase}
+  h1{font-size:40px; line-height:1.15; letter-spacing:-.015em; font-weight:600; margin:16px 0 14px}
+  .lede{font-size:17px; line-height:1.8; color:var(--soft); max-width:820px; margin:0 0 30px}
+  .meta{display:flex; flex-wrap:wrap; border:1px solid var(--line); background:var(--surface)}
+  .meta div{padding:11px 20px; border-right:1px solid var(--line)}
+  .meta div:last-child{border-right:0}
+  .meta b{display:block; font:600 11px/1.6 "Cascadia Mono","Consolas",monospace; letter-spacing:.1em; color:var(--faint); text-transform:uppercase; margin-bottom:2px}
+  .meta span{font-size:14px; color:var(--soft)}
+  .meta .status{color:var(--accent); font-weight:600}
+  section{padding:46px 0 14px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  .sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:20px}
+  .sec-num{font:600 13px/1.6 "Cascadia Mono","Consolas",monospace; color:var(--faint); letter-spacing:.08em}
+  h2{font-size:23px; font-weight:600; letter-spacing:-.01em; margin:0}
+  h3{font-size:16px; font-weight:600; margin:22px 0 10px}
+  p{margin:0 0 14px; max-width:860px}
+  ul{margin:0 0 14px; padding-left:22px; max-width:880px}
+  li{margin:7px 0; color:var(--soft)}
+  b.k{font-weight:600; color:var(--ink)}
+  code{font:500 13.5px/1.7 "Cascadia Mono","Consolas",monospace; background:#efece6; border:1px solid var(--line); padding:1px 6px}
+  table{border-collapse:collapse; width:100%; margin:16px 0 10px; font-size:14.5px}
+  th{font:600 12px/1.6 "Cascadia Mono","Consolas",monospace; letter-spacing:.08em; color:var(--muted); text-align:left; padding:10px 14px; border-bottom:1px solid var(--line-strong)}
+  td{padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--soft)}
+  td:first-child{color:var(--ink)}
+  .flow{display:flex; flex-wrap:wrap; gap:8px; align-items:center; border:1px solid var(--line); background:var(--surface); padding:16px 18px; margin:18px 0; max-width:1000px}
+  .flow .n{border:1px solid var(--line-strong); padding:5px 11px; font-size:13px; color:var(--soft); background:#fdfcf9}
+  .flow .a{color:var(--faint); font-family:"Cascadia Mono","Consolas",monospace}
+  .callout{border:1px solid var(--line); background:var(--surface); padding:14px 18px; margin:18px 0; max-width:880px}
+  .callout .lbl{font:600 11.5px/1.6 "Cascadia Mono","Consolas",monospace; letter-spacing:.1em; color:var(--faint); display:block; margin-bottom:6px}
+  .callout p{margin:0; font-size:14.5px}
+  .check li{list-style:none}
+  .check li::before{content:"□ "; color:var(--faint)}
+  .pre{font:500 13px/1.75 "Cascadia Mono","Consolas",monospace; background:#efece6; border:1px solid var(--line); padding:12px 16px; margin:14px 0; white-space:pre-wrap; max-width:880px}
+  .end{margin-top:56px; padding-top:18px; border-top:1px solid var(--line-strong); font:500 12.5px/1.8 "Cascadia Mono","Consolas",monospace; color:var(--faint); letter-spacing:.04em}
+  @media (max-width:900px){
+    .wrap{padding:0 22px 64px}
+    h1{font-size:30px}
+    .meta{flex-direction:column}
+    .meta div{border-right:0; border-bottom:1px solid var(--line)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Handover · 开发交接文档</div>
+  <h1>水洗唛打印助手 · 开发交接</h1>
+  <p class="lede">面向后续维护与二次开发：系统架构、目录说明、运行维护、安装包构建与发布、版本历史、已知限制、接手检查清单，以及本次整理的记录。</p>
+  <div class="meta">
+    <div><b>版本</b><span>v2.1 + 一键安装包</span></div>
+    <div><b>日期</b><span>2026-09-22</span></div>
+    <div><b>仓库</b><span>Jace-Hao / Print-Converter</span></div>
+    <div><b>状态</b><span class="status">门店已上线运行</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>项目速览</h2></div>
+  <ul>
+    <li><b class="k">一句话</b>：把洗衣管家打印的水洗唛（120×30mm 横版）自动转换为门店标签机（佳博 GP-9134T）的出纸规格（30×120mm 竖版）并完成打印与归档。</li>
+    <li><b class="k">仓库</b>：<code>https://github.com/Jace-Hao/Print-Converter</code>；<b class="k">发布页</b>：<code>.../releases/tag/v2.1</code>（含安装包）。</li>
+    <li><b class="k">当前状态</b>：v2.1 已在门店工作机常驻运行（后台服务 + 操作页面 + 开机自启）；一键安装包已发布。</li>
+    <li><b class="k">本地位置</b>：开发副本 <code>E:\软件开发\水洗唛打印助手</code>；安装版目录可选（默认 <code>C:\水洗唛打印助手</code>）。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>系统架构</h2></div>
+  <div class="flow">
+    <span class="n">洗衣管家（打印）</span><span class="a">→</span>
+    <span class="n">虚拟打印机「水洗唛打印助手」</span><span class="a">→</span>
+    <span class="n">文件槽捕获（60ms）</span><span class="a">→</span>
+    <span class="n">截取对齐 + 2.03mm 补偿</span><span class="a">→</span>
+    <span class="n">旋转 90°</span><span class="a">→</span>
+    <span class="n">打印到「水洗唛」</span><span class="a">→</span>
+    <span class="n">归档 + 预览 + 日志</span>
+  </div>
+  <p>一个后台进程（<code>app/console.py</code>，无窗口、单实例、开机自启）同时提供：① 监视处理管线；② 本地操作页面（仅本机）；③ 每日清理。</p>
+  <h3>三个关键机制（维护时理解这几条即可）</h3>
+  <ul>
+    <li><b class="k">文件槽捕获</b>：虚拟打印机每次任务重写 <code>spool\capture.pdf</code>；服务 60ms 轮询读取完整版本（%PDF / %%EOF 校验）。判重规则为「<b class="k">内容 + 写入时间都相同</b>才算同一版本」——保证同一张唛复打两遍（鞋类常见）也能逐张出纸。</li>
+    <li><b class="k">截取对齐</b>：捕获页为 A4，仅截取左上角 <code>[0,0,120,30]mm</code>，并按 <code>shift_mm=[2.03,0]</code> 平移，与旧版式逐像素对齐（偏差 ≤1px）。</li>
+    <li><b class="k">每日清理</b>：归档 / 预览默认保留最近 7 天（<code>config.json → cleanup</code>；每天自动执行，支持 <code>cleanup</code> 命令手动执行）。</li>
+  </ul>
+  <h3>模块表（app/）</h3>
+  <table>
+    <thead><tr><th style="width:26%">模块</th><th>职责</th></tr></thead>
+    <tbody>
+      <tr><td><code>config.py</code></td><td>配置加载 / 保存（含全部默认值）</td></tr>
+      <tr><td><code>logutil.py</code></td><td>日志（<code>out\logs\YYYY-MM-DD.log</code>）</td></tr>
+      <tr><td><code>render.py</code></td><td>PDF → 位图：渲染、截取、旋转、排版</td></tr>
+      <tr><td><code>printutil.py</code></td><td>GDI 直打（1:1 像素到标签机）</td></tr>
+      <tr><td><code>pipeline.py</code></td><td>单文件处理：逐页转换 → 打印 → 归档</td></tr>
+      <tr><td><code>watcher.py</code></td><td>目录监视 + 槽文件处理 + 安全校验</td></tr>
+      <tr><td><code>capture.py</code></td><td>文件槽高速捕获（轮询 + 判重）</td></tr>
+      <tr><td><code>console.py</code></td><td>后台服务：监视器 + 操作页面 + 每日清理线程</td></tr>
+      <tr><td><code>vpinstall.py</code></td><td>虚拟打印机安装 / 卸载 / 状态（管理员）</td></tr>
+      <tr><td><code>retention.py</code></td><td>每日清理（归档 / 预览过期文件）</td></tr>
+      <tr><td><code>cli.py</code></td><td>命令行入口（console / watch / once / cleanup / init 等）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>目录与文件</h2></div>
+  <table>
+    <thead><tr><th style="width:34%">路径</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>打开操作页面.cmd</code> / <code>停止软件.cmd</code></td><td>日常入口：启动（后台静默）并打开操作页面 / 停止软件</td></tr>
+      <tr><td><code>安装虚拟打印机.cmd</code> / <code>卸载虚拟打印机.cmd</code></td><td>虚拟打印机安装 / 卸载（需管理员确认一次）</td></tr>
+      <tr><td><code>安装开机自启.ps1</code> / <code>卸载开机自启.ps1</code></td><td>开机自启的安装与卸载（支持 -Silent）</td></tr>
+      <tr><td><code>卸载清理.ps1</code></td><td>卸载清理：仅停止 / 移除「指向本目录」的服务、自启、虚拟打印机（安全限定）</td></tr>
+      <tr><td><code>打印校准唛.cmd</code> / <code>把pdf拖到这里处理.cmd</code></td><td>打印两版校准唛 / 手动处理单个 PDF</td></tr>
+      <tr><td><code>app\</code></td><td>程序代码（见 §2 模块表）</td></tr>
+      <tr><td><code>web\操作页面.html</code></td><td>操作页面（文案 / 配色可改，文件顶部有指引）</td></tr>
+      <tr><td><code>构建工具\安装包\</code></td><td>安装包构建：Inno Setup 工程 + <code>build_installer.ps1</code></td></tr>
+      <tr><td><code>开发工具\验证脚本\</code></td><td>历史验证 / 回归脚本（7 个 + 说明 README）</td></tr>
+      <tr><td><code>docs_build\</code></td><td>《使用说明与交付报告.docx》生成脚本（备用）</td></tr>
+      <tr><td><code>extras\</code></td><td>已下线组件存档（布局设计器等，原样保留，主链路零引用）</td></tr>
+      <tr><td><code>out\archive\</code> / <code>out\previews\</code> / <code>out\logs\</code></td><td>归档 PDF / 位图预览 / 日志（前两者参与每日清理）</td></tr>
+      <tr><td><code>spool\</code> / <code>dist\</code> / <code>backup\</code></td><td>捕获与作业暂存 / 安装包产物 / 本机状态备份（不入库）</td></tr>
+      <tr><td><code>config.json</code></td><td>运行配置（见 §4）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>运行与维护</h2></div>
+  <p>日常操作：双击「打开操作页面.cmd」→ 浏览器打开操作页面（状态、虚拟打印机检测 / 修复、打印校准唛、打开目录、最近处理、日志）。</p>
+  <h3>config.json 关键项</h3>
+  <table>
+    <thead><tr><th>项</th><th>默认</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>pipeline.rotate_dir</code></td><td>cw</td><td>旋转方向（顺时针 / 逆时针，待现场目检确认）</td></tr>
+      <tr><td><code>capture.crop_mm</code> / <code>shift_mm</code></td><td>[0,0,120,30] / [2.03,0]</td><td>截取与对齐补偿（校准时调整）</td></tr>
+      <tr><td><code>print.printer</code></td><td>水洗唛</td><td>目标标签机</td></tr>
+      <tr><td><code>cleanup.days</code></td><td>7</td><td>归档 / 预览保留天数（0 = 每次清理时清空）</td></tr>
+      <tr><td><code>automation.mode</code></td><td>auto</td><td>改 dry_run 则只预览不打印（调试用）</td></tr>
+      <tr><td><code>watch.dirs</code></td><td>见文件</td><td>兜底监视目录（旧 pdfFactory 自动保存等）</td></tr>
+    </tbody>
+  </table>
+  <h3>常用命令（在项目目录运行）</h3>
+  <div class="pre">python -m app.cli console      # 启动后台服务 + 操作页面（主进程）
+python -m app.cli cleanup      # 立即清理归档/预览过期文件
+python -m app.cli init         # 安装后初始化（规范化配置路径）
+python -m app.cli calibrate    # 打印两版校准唛
+python -m app.cli vp status    # 虚拟打印机状态
+python -m app.cli printers     # 打印机与分辨率信息
+python -m app.cli info 文件.pdf  # PDF 页面几何信息</div>
+  <h3>故障排查速查</h3>
+  <table>
+    <thead><tr><th style="width:32%">现象</th><th>处理</th></tr></thead>
+    <tbody>
+      <tr><td>打印后没出标签</td><td>检查打印时选的打印机是否为「水洗唛打印助手」；打开操作页面看状态；查 <code>out\logs</code> 当天日志</td></tr>
+      <tr><td>打印机不见了</td><td>双击「安装虚拟打印机.cmd」重装；或操作页面 →「虚拟打印机」检测 / 修复</td></tr>
+      <tr><td>页面打不开</td><td>双击「打开操作页面.cmd」（会确保服务在运行）；端口被占用会自动尝试相邻端口</td></tr>
+      <tr><td>某类打印没自动出</td><td>内容不在标签区域的文件会被安全闸移入 <code>out\hold</code>（防止误打），人工确认后处理</td></tr>
+      <tr><td>标签方向不对</td><td>改 <code>pipeline.rotate_dir</code> 后重启软件（先打校准唛对比）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>构建与发布（一键安装包）</h2></div>
+  <ul>
+    <li><b class="k">构建</b>：<code>构建工具\安装包\build_installer.ps1</code>；前置 = Inno Setup 6；<b class="k">首次构建需要网络</b>（自动下载嵌入式 Python 运行时并安装依赖）。参数：<code>-RuntimeFrom</code>（复用已有运行时）/ <code>-SkipRuntime</code>。产物在 <code>dist\</code>。</li>
+    <li><b class="k">当前安装包</b>：<code>水洗唛打印助手-安装包-v2.1.exe</code>；SHA256 <code>12C683E3…C1ABAAB</code>（完整值见《安装部署说明》）。</li>
+    <li><b class="k">发布</b>：GitHub Release 上传（tag v2.1）。注意：发布平台资源名不支持中文，线上资源名为 <code>Print-Converter-Setup-v2.1.exe</code>。</li>
+  </ul>
+  <div class="callout">
+    <span class="lbl">构建踩坑沉淀（重构时注意）</span>
+    <p>① <code>.cmd</code> 必须 CRLF 行尾（LF + 中文 + chcp 会被解析出杂音命令）；② <code>.ps1</code> 需 UTF-8 BOM；③ 内嵌运行时 <code>._pth</code> 需含 <code>..</code>；④ 卸载清理的进程匹配先限定 <code>Name=python*</code>；⑤ 静默测试：<code>/VERYSILENT /TASKS="" /DIR=... /LOG=...</code>。</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>版本历史</h2></div>
+  <table>
+    <thead><tr><th>版本</th><th>日期</th><th>要点</th></tr></thead>
+    <tbody>
+      <tr><td>v1.0</td><td>2026-09-22</td><td>初版：捕获 → 旋转 → 打印；标签内容编辑器</td></tr>
+      <tr><td>v2.0</td><td>2026-09-22</td><td>自建虚拟打印机 + 文件槽高速捕获；布局设计器（v2.1 已下线）</td></tr>
+      <tr><td>v2.1</td><td>2026-09-22</td><td>精简（编辑类下线归档）；操作页面；后台常驻 + 开机自启；每日清理；双张 / 闪窗等修复</td></tr>
+      <tr><td>v2.1 安装包</td><td>2026-09-22</td><td>Inno 一键安装：内嵌运行时、目录可选、完整卸载</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">07</span><h2>已知限制与注意事项</h2></div>
+  <ul>
+    <li><b class="k">旋转方向</b>：出厂默认顺时针（cw），需现场目检校准唛后最终确认（改配置即可，不涉及代码）。</li>
+    <li><b class="k">单实例</b>：同机只允许一个服务实例；多份安装共用同一虚拟打印机与自启项（会指向最新安装的目录）。</li>
+    <li><b class="k">捕获为覆盖式写入</b>：60ms 轮询已实测连打不丢；极端情况可按 <code>out\archive</code> 记录补打。</li>
+    <li><b class="k">旧通道兜底</b>：pdfFactory 自动保存目录仍被监听（兼容历史流程）。</li>
+    <li><b class="k">卸载</b>：会移除程序、自启与虚拟打印机；<code>out\</code> 数据目录保留（如需彻底清理手动删除）。</li>
+    <li><b class="k">安装包未做代码签名</b>：新机器首次运行可能有 SmartScreen 提示（选择「仍要运行」）。</li>
+    <li><b class="k">非本项目提示</b>：计划任务「XQY-XYGJ-Bridge」为照片同步项目遗留（指向已不存在的脚本），与本工具无关，请勿改动，待照片项目处理。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">08</span><h2>交接检查清单（建议接手第一步）</h2></div>
+  <ul class="check">
+    <li>双击「打开操作页面.cmd」，确认服务与虚拟打印机状态正常；</li>
+    <li>打印一张真实水洗唛，核对方向与位置（与旧版式一致）；</li>
+    <li>阅读《使用说明.html》《安装部署说明.html》；</li>
+    <li>确认可访问 GitHub 仓库与 Release 页；</li>
+    <li>了解安装包重建方式（见 §5）。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">09</span><h2>记录位置与整理记录</h2></div>
+  <ul>
+    <li>仓库文档：使用说明 / 安装部署说明 / 双张打印修复说明 / 本交接文档；</li>
+    <li>开发过程记录：<code>E:\软件开发\.cluster\wash-label\</code>（研究、计划、样例）；<code>E:\软件开发\memory\</code>（每日记录）；</li>
+    <li>验证脚本：<code>开发工具\验证脚本\</code>（README 说明各脚本用途与注意事项）。</li>
+    <li><b class="k">本次整理（2026-09-22）</b>：删除构建缓存约 0.5GB（可重建）；临时区其余 170 项 + 3 个重复安装包副本移入回收站（可恢复），临时区已清空；验证脚本 8 件归档；历史找回副本移至 <code>backup\recovered-20260922\</code>；其他项目目录未改动。</li>
+  </ul>
+</section>
+
+<div class="end">水洗唛打印助手 · 开发交接文档 · 2026-09-22</div>
+
+</div>
+</body>
+</html>
