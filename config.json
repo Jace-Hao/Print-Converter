@@ -53,9 +53,7 @@
     ],
     "crop_pad_mm": 0.5,
     "crop_white": 250,
-    "align": "center",
-    "render_mode": "rotate",
-    "layout_template": "默认"
+    "align": "center"
   },
   "print": {
     "printer": "水洗唛",

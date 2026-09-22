@@ -15,6 +15,8 @@ class Watcher:
         self.state_path = os.path.join(cfg.root, "out", "state.json")
         self.pending = {}
         self.processed = {}
+        self._stop = False
+        self.slot = None
         self._load()
 
     # ---------- 状态 ----------
@@ -201,6 +203,15 @@ class Watcher:
         self._maybe_close_windows()
         self.log.info("完成(虚拟打印机): %s -> %s 个标签", os.path.basename(path), len(res.get("labels", [])))
 
+    def stop(self):
+        """请求停止监视(供后台服务退出时调用)"""
+        self._stop = True
+        try:
+            if self.slot is not None:
+                self.slot.stop()
+        except Exception:
+            pass
+
     def run(self, once=False):
         self.log.info("监视启动: %s", " , ".join(self.cfg["watch"]["dirs"]))
         if not once:
@@ -210,7 +221,7 @@ class Watcher:
                 self.slot.start()
             except Exception as e:
                 self.log.exception("文件槽捕获启动失败: %s", e)
-        while True:
+        while not self._stop:
             try:
                 self.scan_once()
             except Exception as e:

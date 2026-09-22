@@ -41,8 +41,6 @@ DEFAULTS = {
         "crop_pad_mm": 0.5,           # 裁剪内容时的留边
         "crop_white": 250,            # 判定“白”的灰度阈值
         "align": "center",            # center | top | bottom | left | right
-        "render_mode": "rotate",      # rotate=原样旋转 | layout=按布局模板重排
-        "layout_template": "默认",     # layout 模式使用的模板名(templates/*.json)
     },
     "print": {
         "printer": "水洗唛",           # 目标打印机(GP-9134T)

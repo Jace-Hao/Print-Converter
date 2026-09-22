@@ -42,16 +42,16 @@
     },
     {
       "type": "text",
-      "x_mm": 102.7,
-      "y_mm": 1.3,
+      "x_mm": 112.5,
+      "y_mm": 1.5,
       "size_mm": 4.3,
       "align": "right",
       "text": "{门店名}"
     },
     {
       "type": "barcode",
-      "x_mm": 91.0,
-      "y_mm": 5.0,
+      "x_mm": 94.0,
+      "y_mm": 13.5,
       "width_mm": 28.0,
       "height_mm": 7.4,
       "align": "center",
@@ -59,8 +59,8 @@
     },
     {
       "type": "text",
-      "x_mm": 91.0,
-      "y_mm": 12.8,
+      "x_mm": 93.0,
+      "y_mm": 22.5,
       "size_mm": 3.3,
       "align": "center",
       "text": "{条码号}"

@@ -2,17 +2,13 @@
 """水洗唛打印助手 - 命令行入口
 
 用法:
+  python -m app.cli console                   启动后台服务 + 操作页面(软件主进程)
   python -m app.cli watch                     常驻监视(捕获->旋转->打印)
   python -m app.cli once <pdf> [--dry-run] [--force]    处理单个文件
   python -m app.cli printers                  打印机信息与分辨率
   python -m app.cli vp [install|uninstall|status]  虚拟打印机(水洗唛打印助手)
   python -m app.cli info <pdf>                PDF 页面几何信息
   python -m app.cli calibrate                打印旋转方向校准标签(两版)
-  python -m app.cli recognize <pdf>          识别标签字段(JSON 输出)
-  python -m app.cli design                   打开布局设计器(设计水洗唛布局)
-  python -m app.cli custom [pdf]             打开布局设计器(兼容旧入口)
-  python -m app.cli layout --json <json|路径> 按布局模板渲染/打印(--template 模板名)
-  python -m app.cli label --json <json|路径> 渲染/打印自定义标签(--print 打印, --out 存图)
 """
 import argparse
 import json
@@ -34,9 +30,22 @@ def _setup():
 
 
 def cmd_watch(args, cfg, log):
+    from app.console import instance_running
+
+    if instance_running() and not args.force:
+        print("后台服务已在运行（操作页面模式）。如需命令行监视，请先停止软件，或添加 --force 参数。")
+        return
     from app.watcher import Watcher
 
     Watcher(cfg, log).run(once=args.once)
+
+
+def cmd_console(args, cfg, log):
+    from app.console import run as console_run
+
+    rc = console_run()
+    if rc:
+        log.warning("console 返回码 %d", rc)
 
 
 def cmd_once(args, cfg, log):
@@ -142,77 +151,16 @@ def cmd_calibrate(args, cfg, log):
         cfg["pipeline"]["rotate_dir"] = old
 
 
-def cmd_recognize(args, cfg, log):
-    from app.recognize import recognize_fields
-
-    fields = recognize_fields(args.pdf)
-    print(json.dumps(fields, ensure_ascii=False, indent=2))
-
-
-def cmd_design(args, cfg, log):
-    from app.designer import main as designer_main
-
-    designer_main([])
-
-
-def cmd_custom(args, cfg, log):
-    from app.designer import main as designer_main
-
-    designer_main(["--pdf", args.pdf] if args.pdf else [])
-
-
-def cmd_layout(args, cfg, log):
-    from app.layout import load_template, print_layout, render_template
-
-    tpl_name = args.template or cfg["pipeline"].get("layout_template") or "默认"
-    tpl = load_template(cfg, tpl_name)
-    if tpl is None:
-        print("未找到布局模板: %s" % tpl_name)
-        return
-    raw = (args.json or "{}").strip()
-    if os.path.exists(raw):
-        with open(raw, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    else:
-        data = json.loads(raw)
-    dpi = int(cfg["pipeline"]["render_dpi"])
-    if args.out:
-        render_template(tpl, data, dpi=dpi).save(args.out)
-        print("渲染完成: " + args.out)
-    if args.do_print:
-        prev = print_layout(cfg, log, tpl, data, dry_run=False)
-        print("已打印。预览: " + prev)
-    elif not args.out:
-        prev = print_layout(cfg, log, tpl, data, dry_run=True)
-        print("已生成预览(未打印): " + prev)
-
-
-def cmd_label(args, cfg, log):
-    from app.labelgen import print_custom_label, render_label
-
-    raw = (args.json or "").strip()
-    if os.path.exists(raw):
-        with open(raw, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    else:
-        data = json.loads(raw)
-    if args.out:
-        render_label(data, dpi=int(cfg["pipeline"]["render_dpi"])).save(args.out)
-        print("渲染完成: " + args.out)
-    if args.do_print:
-        prev = print_custom_label(cfg, log, data, dry_run=False)
-        print("已打印。存档: " + prev)
-    elif not args.out:
-        prev = print_custom_label(cfg, log, data, dry_run=True)
-        print("已生成预览(未打印): " + prev)
-
-
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="水洗唛打印助手")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
+    p = sub.add_parser("console", help="启动后台服务 + 操作页面")
+    p.set_defaults(func=cmd_console)
+
     p = sub.add_parser("watch", help="常驻监视")
     p.add_argument("--once", action="store_true")
+    p.add_argument("--force", action="store_true", help="忽略已运行的后台服务")
     p.set_defaults(func=cmd_watch)
 
     p = sub.add_parser("once", help="处理单个 PDF")
@@ -234,30 +182,6 @@ def main(argv=None):
 
     p = sub.add_parser("calibrate", help="打印旋转方向校准标签")
     p.set_defaults(func=cmd_calibrate)
-
-    p = sub.add_parser("recognize", help="识别标签 PDF 的字段(JSON)")
-    p.add_argument("pdf")
-    p.set_defaults(func=cmd_recognize)
-
-    p = sub.add_parser("design", help="打开布局设计器")
-    p.set_defaults(func=cmd_design)
-
-    p = sub.add_parser("custom", help="打开布局设计器(兼容旧入口)")
-    p.add_argument("pdf", nargs="?", default=None)
-    p.set_defaults(func=cmd_custom)
-
-    p = sub.add_parser("layout", help="按布局模板渲染/打印标签")
-    p.add_argument("--template", default=None, help="模板名(默认取配置 layout_template)")
-    p.add_argument("--json", required=True, help="字段 JSON(字符串或文件路径)")
-    p.add_argument("--print", dest="do_print", action="store_true", help="渲染后打印")
-    p.add_argument("--out", help="另存渲染图 PNG")
-    p.set_defaults(func=cmd_layout)
-
-    p = sub.add_parser("label", help="渲染/打印自定义标签")
-    p.add_argument("--json", required=True, help="字段 JSON(字符串或文件路径)")
-    p.add_argument("--print", dest="do_print", action="store_true", help="渲染后打印")
-    p.add_argument("--out", help="另存渲染图 PNG")
-    p.set_defaults(func=cmd_label)
 
     args = ap.parse_args(argv)
     cfg, log = _setup()

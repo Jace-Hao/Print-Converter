@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>水洗唛打印助手 · 操作中心</title>
+<!-- ======================================================================
+  修改指南（3 处即可改完）：
+  1. 配色：改下方 <style> 里 :root 的 CSS 变量（--accent 主色等）；
+  2. 文案：直接改正文里的中文文字；
+  3. 数据：页面每 3 秒自动请求 /api/status（由 app/console.py 提供）。
+  说明：本页面只用于“操作与查看”，不包含任何编辑功能。
+======================================================================= -->
+<style>
+  :root{
+    --bg:#F5F3EF; --card:#FFFFFF; --ink:#23211D; --ink2:#5C574E;
+    --muted:#8A8378; --line:#E3DED3; --accent:#0B6E96; --accent-2:#0A5E80;
+    --ok:#2E7D4F; --warn:#B4690E; --err:#B3352C; --chip:#EEF4F7;
+    --mono:Consolas,"Courier New",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.6 "Microsoft YaHei","PingFang SC",sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 18px 42px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;
+         flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:20px;margin:0}
+  h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;
+        font-size:13px;border:1px solid var(--line);background:#fff}
+  .dot{width:9px;height:9px;border-radius:50%;background:#bbb}
+  .pill.ok .dot{background:var(--ok)} .pill.bad .dot{background:var(--err)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .card h2{font-size:14px;color:var(--ink2);margin:0 0 10px;letter-spacing:.03em}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px;margin:0}
+  .kv dt{color:var(--muted)} .kv dd{margin:0;word-break:break-all}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);
+         background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{background:var(--accent-2)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);
+        border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0;font-size:12.5px;color:var(--ink2)}
+  .list{margin:0;padding:0;list-style:none;font-size:13px}
+  .list li{border-top:1px solid var(--line);padding:7px 0;display:flex;
+           justify-content:space-between;gap:10px}
+  .list li:first-child{border-top:0}
+  .list .t{color:var(--muted);white-space:nowrap}
+  pre{background:#262420;color:#E8E4DC;border-radius:8px;padding:10px 12px;overflow:auto;
+      font:12px/1.55 var(--mono);max-height:230px;margin:0;white-space:pre-wrap}
+  .toast{position:fixed;right:18px;bottom:18px;max-width:380px;background:#23211D;color:#fff;
+         padding:10px 14px;border-radius:8px;font-size:13.5px;opacity:0;transform:translateY(8px);
+         transition:.25s;pointer-events:none;white-space:pre-line}
+  .toast.show{opacity:1;transform:none}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:10px}
+  .banner{display:none;margin-bottom:14px;padding:10px 14px;border-radius:8px;background:#FBEAE8;
+          border:1px solid #E4B8B3;color:var(--err);font-size:13.5px}
+  .banner.show{display:block}
+  .good{color:var(--ok)} .bad{color:var(--warn)}
+  @media (max-width:520px){ h1{font-size:17px} .wrap{padding:14px 10px 30px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>水洗唛打印助手 <span>操作中心 <span id="ver"></span></span></h1>
+    <span class="pill" id="pill"><span class="dot"></span><span id="pillText">连接中…</span></span>
+  </header>
+  <div class="banner" id="banner">与后台服务的连接已断开：请双击工具目录中的「打开操作页面.cmd」重新启动软件。</div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>软件状态</h2>
+      <dl class="kv">
+        <dt>状态</dt><dd id="st-state">–</dd>
+        <dt>启动时间</dt><dd id="st-since">–</dd>
+        <dt>进程 / 端口</dt><dd id="st-pid">–</dd>
+        <dt>监视目录</dt><dd id="st-dirs">–</dd>
+        <dt>捕获文件</dt><dd id="st-capture">–</dd>
+        <dt>最后刷新</dt><dd id="st-now">–</dd>
+      </dl>
+      <div class="hint">软件在后台常驻运行：关闭本页面不影响打印；重新打开请双击「打开操作页面.cmd」；彻底退出请双击「停止软件.cmd」。</div>
+    </section>
+
+    <section class="card">
+      <h2>虚拟打印机</h2>
+      <dl class="kv">
+        <dt>设备</dt><dd id="vp-name">–</dd>
+        <dt>打印机</dt><dd id="vp-printer">–</dd>
+        <dt>端口</dt><dd id="vp-port">–</dd>
+      </dl>
+      <div class="btns">
+        <button onclick="act('vp_check')">检测</button>
+        <button onclick="act('vp_install')">安装 / 修复</button>
+      </div>
+      <div class="hint">日常打印水洗唛时，请选择「水洗唛打印助手」这台打印机。</div>
+    </section>
+
+    <section class="card">
+      <h2>快捷操作</h2>
+      <div class="btns">
+        <button class="primary" onclick="act('calibrate', true)">打印校准唛（两版）</button>
+        <button onclick="act('open_dir', false, 'archive')">归档目录</button>
+        <button onclick="act('open_dir', false, 'previews')">预览目录</button>
+        <button onclick="act('open_dir', false, 'logs')">日志目录</button>
+        <button onclick="act('open_dir', false, 'inbox')">手动投递目录</button>
+      </div>
+      <div class="hint">校准唛会打印两张（第 1 版顺时针 / 第 2 版逆时针），选与日常方向一致的那版即可。</div>
+    </section>
+
+    <section class="card">
+      <h2>最近处理（归档）</h2>
+      <ul class="list" id="recent"><li><span>暂无记录</span></li></ul>
+    </section>
+
+    <section class="card" style="grid-column:1/-1">
+      <h2>运行日志（最近 12 行）</h2>
+      <pre id="logs">加载中…</pre>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let busy = false;
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function size(n){ n = Number(n)||0; return n > 1024 ? (n/1024).toFixed(0) + ' KB' : n + ' B'; }
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 4200); }
+
+async function refresh(){
+  try{
+    const r = await fetch('/api/status', {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const st = await r.json();
+    $('pill').className = 'pill ok'; $('pillText').textContent = '软件运行中';
+    $('banner').classList.remove('show');
+    $('ver').textContent = st.version || '';
+    $('st-state').innerHTML = (st.watcher && st.watcher.alive)
+      ? '<span class="good">运行中（后台常驻）</span>' : '<span class="bad">已停止</span>';
+    $('st-since').textContent = st.started || '–';
+    $('st-pid').textContent = (st.pid || '–') + ' / ' + (st.port || '–');
+    const dirs = (st.watcher && st.watcher.dirs) || [];
+    $('st-dirs').innerHTML = dirs.length ? dirs.map(d => '<span class="chip">' + esc(d) + '</span>').join('') : '–';
+    const c = st.capture || {};
+    $('st-capture').textContent = c.exists ? (c.mtime + '（' + size(c.size) + '）') : '暂无（等待打印）';
+    $('st-now').textContent = st.now || '–';
+    const vp = st.vprinter || {};
+    $('vp-name').textContent = vp.name || '–';
+    $('vp-printer').innerHTML = vp.printer_ok
+      ? '<span class="good">就绪</span>' : '<span class="bad">未就绪（可点击「安装 / 修复」）</span>';
+    $('vp-port').innerHTML = (vp.port_ok ? '<span class="good">就绪</span>' : '<span class="bad">未就绪</span>') + '　' + esc(vp.port || '');
+    const rc = $('recent');
+    if((st.recent || []).length){
+      rc.innerHTML = st.recent.map(x => '<li><span>' + esc(x.name) + '</span><span class="t">' + esc(x.time) + '</span></li>').join('');
+    } else { rc.innerHTML = '<li><span>暂无记录</span></li>'; }
+    $('logs').textContent = (st.log_tail || []).join('\n') || '（暂无日志）';
+  }catch(e){
+    $('pill').className = 'pill bad'; $('pillText').textContent = '连接中断';
+    $('banner').classList.add('show');
+  }
+}
+
+async function act(name, confirmFirst, arg){
+  if(busy) return;
+  if(confirmFirst && !confirm('确定要执行该操作吗？（会打印实物）')) return;
+  busy = true;
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try{
+    const r = await fetch('/api/action', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: name, arg: arg})});
+    const j = await r.json();
+    toast((j.ok ? '操作已执行：' : '操作失败：') + (j.msg || ''));
+  }catch(e){ toast('操作失败：' + e.message); }
+  busy = false;
+  document.querySelectorAll('button').forEach(b => b.disabled = false);
+  setTimeout(refresh, 600);
+}
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>
