@@ -1,0 +1,15 @@
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 运行数据（日志 / 归档 / 预览 / 状态）
+out/
+
+# 收件箱内容（保留空目录）
+inbox/*
+!inbox/.gitkeep
+
+# 内部与系统文件
+.openclaw/
+Thumbs.db
+desktop.ini

@@ -1,0 +1,56 @@
+{
+  "watch": {
+    "dirs": [
+      "C:\\Users\\haoyuwei\\Documents\\PDF files\\自动保存",
+      "D:\\水洗唛输出",
+      "E:\\软件开发\\水洗唛打印助手\\inbox"
+    ],
+    "pattern": "*.pdf",
+    "ignore_names": [
+      "spool.pdf"
+    ],
+    "stable_seconds": 8,
+    "poll_seconds": 1.5
+  },
+  "validate": {
+    "enabled": true,
+    "aspect_range": [
+      3.2,
+      4.6
+    ],
+    "size_tol_mm": 3.0
+  },
+  "pipeline": {
+    "mode": "auto",
+    "rotate_dir": "cw",
+    "canvas_mm": [
+      30.0,
+      120.0
+    ],
+    "render_dpi": 300,
+    "offset_mm": [
+      0.0,
+      0.0
+    ],
+    "crop_pad_mm": 0.5,
+    "crop_white": 250,
+    "align": "center"
+  },
+  "print": {
+    "printer": "水洗唛",
+    "copies": 1,
+    "dither": true,
+    "threshold": 160
+  },
+  "automation": {
+    "enabled": true,
+    "mode": "auto",
+    "close_pdffactory_window": true
+  },
+  "paths": {
+    "archive": "out\\archive",
+    "logs": "out\\logs",
+    "previews": "out\\previews",
+    "inbox": "inbox"
+  }
+}
