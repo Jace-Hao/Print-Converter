@@ -25,11 +25,15 @@ def is_admin():
         return False
 
 
+CREATE_NO_WINDOW = 0x08000000  # 不弹出控制台窗口（Windows）
+
+
 def _ps(cmd, check=True):
     p = subprocess.run(
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
          "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " + cmd],
-        capture_output=True, text=True, encoding="utf-8", errors="replace")
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        creationflags=CREATE_NO_WINDOW)
     out = (p.stdout or "").strip()
     err = (p.stderr or "").strip()
     if check and p.returncode != 0:
