@@ -44,6 +44,10 @@ def process_pdf(cfg, log, pdf_path, dry_run=False):
         arch_dir = cfg.path_of("archive")
         os.makedirs(arch_dir, exist_ok=True)
         arch = os.path.join(arch_dir, base + "_" + _ts() + ".pdf")
+        n = 1
+        while os.path.exists(arch):
+            arch = os.path.join(arch_dir, base + "_" + _ts() + "_%02d.pdf" % n)
+            n += 1
         moved = False
         for attempt in range(5):
             try:

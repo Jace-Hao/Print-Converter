@@ -26,24 +26,27 @@ class SlotWatcher:
         self.poll = float(c.get("poll_seconds", 0.06))
         self.jobs_dir = os.path.join(cfg.root, "spool", "jobs")
         self.state_path = os.path.join(cfg.root, "out", "slot_state.json")
-        self._last_hash = self._load_state()
+        self._last_hash, self._last_mtime_ns = self._load_state()
         self._stop = False
         self._q = queue.Queue()
         self._captured = 0
 
     # ---------- 状态 ----------
     def _load_state(self):
+        """返回 (last_hash, last_mtime_ns)；旧版状态文件可能没有 mtime 字段"""
         try:
             with open(self.state_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("last_hash", "")
+                d = json.load(f)
+            return d.get("last_hash", ""), d.get("last_mtime_ns")
         except Exception:
-            return ""
+            return "", None
 
     def _save_state(self):
         try:
             os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
             with open(self.state_path, "w", encoding="utf-8") as f:
                 json.dump({"last_hash": self._last_hash,
+                           "last_mtime_ns": self._last_mtime_ns,
                            "updated": time.strftime("%Y-%m-%d %H:%M:%S")},
                           f, ensure_ascii=False)
         except Exception as e:
@@ -51,28 +54,47 @@ class SlotWatcher:
 
     # ---------- 读取与捕获 ----------
     def _read(self):
-        """返回完整 PDF 的 bytes; 文件缺失/未写完/被锁定 时返回 None"""
+        """返回 (完整 PDF bytes, 文件 mtime_ns); 文件缺失/未写完/读取期间被改写时返回 None"""
         try:
+            st1 = os.stat(self.slot)
             with open(self.slot, "rb") as f:
                 data = f.read()
+            st2 = os.stat(self.slot)
         except Exception:
             return None
+        if st1.st_mtime_ns != st2.st_mtime_ns or st1.st_size != st2.st_size:
+            return None  # 读取期间文件在变化, 等下一轮
         if len(data) < 64 or not data.startswith(b"%PDF-"):
             return None
         if b"%%EOF" not in data[-4096:]:
             return None
-        return data
+        return data, st2.st_mtime_ns
 
     def _capture_once(self):
-        data = self._read()
-        if data is None:
+        got = self._read()
+        if got is None:
             return False
+        data, mtime_ns = got
         h = hashlib.sha1(data).hexdigest()
-        if h == self._last_hash:
-            return False
+        repeat = (h == self._last_hash)
+        if repeat:
+            if self._last_mtime_ns is None:
+                # 旧版状态文件只有 hash：记下当前写入时间, 本次按同一版本跳过
+                self._last_mtime_ns = mtime_ns
+                self._save_state()
+                return False
+            if mtime_ns == self._last_mtime_ns:
+                return False  # 同一版文件被重复读取(未发生新写入), 跳过
+            # 内容与上一张相同、但发生了新的写入 -> 是复打(如一双鞋的第二张), 正常捕获
         os.makedirs(self.jobs_dir, exist_ok=True)
         name = time.strftime("capture_%Y%m%d-%H%M%S_") + h[:8] + ".pdf"
         dst = os.path.join(self.jobs_dir, name)
+        n = 1
+        while os.path.exists(dst):
+            # 极端情况: 同一秒内同内容的第二笔(修复后才可能出现) -> 加序号避免覆盖
+            name = "%s_%s_%02d.pdf" % (time.strftime("capture_%Y%m%d-%H%M%S"), h[:8], n)
+            dst = os.path.join(self.jobs_dir, name)
+            n += 1
         try:
             with open(dst, "wb") as f:
                 f.write(data)
@@ -80,9 +102,11 @@ class SlotWatcher:
             self.log.warning("捕获文件写入失败: %s", e)
             return False
         self._last_hash = h
+        self._last_mtime_ns = mtime_ns
         self._save_state()
         self._captured += 1
-        self.log.info("捕获到新的打印任务: %s (%d bytes)", name, len(data))
+        self.log.info("捕获到新的打印任务: %s (%d bytes%s)", name, len(data),
+                      "，与上一张内容相同(复打)" if repeat else "")
         self._q.put(dst)
         return True
 

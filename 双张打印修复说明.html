@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鞋类双张打印 · 修复记录 — 水洗唛打印助手</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --surface:#fbfaf7; --ink:#17181a; --soft:#3b3a37;
+    --muted:#6f6b64; --faint:#9d988e;
+    --line:#d9d6cf; --line-strong:#b9b4aa; --accent:#205c4f; --lost:#8a4a3b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:400 15.5px/1.75 "Microsoft YaHei","PingFang SC","Noto Sans CJK SC","Source Han Sans SC",sans-serif;
+  }
+  .wrap{max-width:1280px; margin:0 auto; padding:0 48px 88px}
+  header.top{padding:68px 0 36px; border-bottom:1px solid var(--line-strong)}
+  .kicker{
+    font:600 12px/1.4 "Cascadia Mono","Consolas","Courier New",monospace;
+    letter-spacing:.14em; color:var(--muted); text-transform:uppercase;
+  }
+  h1{font-size:40px; line-height:1.15; letter-spacing:-.015em; font-weight:600; margin:16px 0 14px}
+  .lede{font-size:17px; line-height:1.8; color:var(--soft); max-width:760px; margin:0 0 30px}
+  .meta{display:flex; flex-wrap:wrap; border:1px solid var(--line); background:var(--surface)}
+  .meta div{padding:11px 20px; border-right:1px solid var(--line)}
+  .meta div:last-child{border-right:0}
+  .meta b{
+    display:block; font:600 11px/1.6 "Cascadia Mono","Consolas",monospace;
+    letter-spacing:.1em; color:var(--faint); text-transform:uppercase; margin-bottom:2px;
+  }
+  .meta span{font-size:14px; color:var(--soft)}
+  .meta .status{color:var(--accent); font-weight:600}
+  section{padding:46px 0 14px; border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  .sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:20px}
+  .sec-num{font:600 13px/1.6 "Cascadia Mono","Consolas",monospace; color:var(--faint); letter-spacing:.08em}
+  h2{font-size:23px; font-weight:600; letter-spacing:-.01em; margin:0}
+  p{margin:0 0 14px; max-width:820px}
+  b.k{font-weight:600; color:var(--ink)}
+  code{
+    font:500 13.5px/1.7 "Cascadia Mono","Consolas",monospace;
+    background:#efece6; border:1px solid var(--line); padding:1px 6px;
+  }
+  .diagram{border:1px solid var(--line); background:var(--surface); padding:20px 22px 16px; margin:22px 0 12px; max-width:980px}
+  .diagram .cap{font:600 11.5px/1.6 "Cascadia Mono","Consolas",monospace; letter-spacing:.1em; color:var(--faint); margin-bottom:12px}
+  .lane{display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:10px 0}
+  .lane + .lane{border-top:1px dashed var(--line)}
+  .lane .tag{font:600 12.5px/1.6 "Cascadia Mono","Consolas",monospace; color:var(--muted); min-width:96px; letter-spacing:.03em}
+  .lane .step{border:1px solid var(--line-strong); background:#fdfcf9; padding:5px 13px; font-size:13.5px; color:var(--soft)}
+  .lane .step.final-ok{border-color:var(--accent); color:var(--accent); font-weight:600}
+  .lane .step.final-lost{border-color:#c8b3a9; color:var(--lost)}
+  .lane .arr{color:var(--faint); font-family:"Cascadia Mono","Consolas",monospace}
+  table{border-collapse:collapse; width:100%; max-width:980px; margin:20px 0 10px; font-size:14.5px}
+  th{
+    font:600 12px/1.6 "Cascadia Mono","Consolas",monospace; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); text-align:left; padding:10px 14px;
+    border-bottom:1px solid var(--line-strong); font-weight:600;
+  }
+  td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--soft)}
+  td.mono{font-family:"Cascadia Mono","Consolas",monospace; font-size:13px; color:var(--ink)}
+  td.res{color:var(--ink); font-weight:600}
+  ul{margin:0 0 14px; padding-left:22px; max-width:820px}
+  li{margin:7px 0; color:var(--soft)}
+  .callout{
+    border:1px solid var(--line); background:var(--surface);
+    padding:14px 18px; margin:18px 0; max-width:820px;
+  }
+  .callout .lbl{font:600 11.5px/1.6 "Cascadia Mono","Consolas",monospace; letter-spacing:.1em; color:var(--faint); display:block; margin-bottom:6px}
+  .callout p{margin:0; font-size:14.5px}
+  .end{margin-top:56px; padding-top:18px; border-top:1px solid var(--line-strong);
+    font:500 12.5px/1.8 "Cascadia Mono","Consolas",monospace; color:var(--faint); letter-spacing:.04em}
+  @media (max-width:900px){
+    .wrap{padding:0 22px 64px}
+    h1{font-size:30px}
+    .meta{flex-direction:column}
+    .meta div{border-right:0; border-bottom:1px solid var(--line)}
+    .lane .tag{min-width:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Maintenance Note · 维护记录</div>
+  <h1>鞋类双张打印：只出一张的修复</h1>
+  <p class="lede">洗衣管家在打印一双鞋的水洗唛时，会把同一张唛连续输出两遍（左右鞋数据相同）。本页记录该场景下第二张丢失的原因、修复方式与实测验证结果。</p>
+  <div class="meta">
+    <div><b>日期</b><span>2026-09-22</span></div>
+    <div><b>组件</b><span>水洗唛打印助手 v2.1</span></div>
+    <div><b>影响场景</b><span>鞋类——同一张唛连打两遍</span></div>
+    <div><b>状态</b><span class="status">已修复并验证</span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>现象</h2></div>
+  <p>打印一双鞋时，洗衣管家连续发送两遍同一张水洗唛（这是它的正常行为，两张内容完全相同）；而工具处理后<b class="k">只有一张</b>从标签机出来。衣物类（一次一张）不受影响。</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>原因</h2></div>
+  <p>工具的链路是：虚拟打印机把每次打印写成一个文件 → 工具高频轮询捕获 → 判重 → 转换并打印。问题出在<b class="k">判重</b>这一环：原来的规则只比较文件内容——「与上一张内容相同就跳过」。</p>
+  <p>而同一张唛连打两遍时，两笔写入间隔约 0.2~0.5 秒。<b class="k">若两笔落在同一秒内，两次生成的 PDF 逐字节完全相同</b>，于是第二张被误判为「同一个文件被重复读取」而跳过；只有刚好跨秒时才会两张都出。多数时候同秒，所以表现为「经常只出一张」。</p>
+  <div class="callout">
+    <span class="lbl">实测证据</span>
+    <p>把连打两份的文件逐字节比对：唯一差异是 PDF 元数据里的秒数（43 与 44），<b class="k">合计 2 个字节</b>。同秒时这 2 个字节也一样，两份文件完全相同。</p>
+  </div>
+  <div class="diagram">
+    <div class="cap">判重流程 · 修复前 / 修复后</div>
+    <div class="lane"><span class="tag">写入 #1</span><span class="arr">→</span><span class="step">捕获</span><span class="arr">→</span><span class="step">打印 ①</span></div>
+    <div class="lane"><span class="tag">写入 #2 · 修复前</span><span class="arr">→</span><span class="step">判重：仅比较内容（相同）</span><span class="arr">→</span><span class="step final-lost">跳过 —— 第二张丢失</span></div>
+    <div class="lane"><span class="tag">写入 #2 · 修复后</span><span class="arr">→</span><span class="step">判重：内容 + 写入时间都相同才算重复</span><span class="arr">→</span><span class="step final-ok">捕获并打印 ②</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>修复内容</h2></div>
+  <ul>
+    <li><b class="k">判重规则改为「内容 + 写入时间都相同」才视为重复</b>：每一笔真实写入（包括内容完全相同的复打）都会被捕获并打印；而轮询对同一版本文件的重复读取仍会正确跳过，不会产生多余打印。</li>
+    <li><b class="k">归档文件名自动加序号</b>：同一秒内的两张，归档时第二张自动编号（<code>_01</code>），两份记录都保留、不再互相覆盖。</li>
+  </ul>
+  <p>涉及文件：<code>app/capture.py</code>、<code>app/pipeline.py</code>。</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>验证记录</h2></div>
+  <table>
+    <thead>
+      <tr><th>测试</th><th>方法</th><th>结果</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono">修复前 · 复现</td>
+        <td>把同一个文件向文件槽写入两次（间隔 0.55 秒）</td>
+        <td class="res">仅捕获并打印 1 张（问题复现）</td>
+      </tr>
+      <tr>
+        <td class="mono">修复后 · 双写</td>
+        <td>把同一个文件写入两次（间隔 0.4 秒）</td>
+        <td class="res">两张全部捕获并打印</td>
+      </tr>
+      <tr>
+        <td class="mono">修复后 · 同秒归档</td>
+        <td>两张落在同一秒内</td>
+        <td class="res">归档保留 2 份（第二份自动编号 _01）</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>后台服务已重启生效；打印机队列为空；捕获与打印链路工作正常。</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>说明与建议</h2></div>
+  <ul>
+    <li>修复验证期间共打印 5 张小测试唛（内容标注 DUP-TEST，可丢弃）。</li>
+    <li><code>out\archive</code> 是每次处理留下的记录；此前被清理进回收站的文件已另存副本备查，建议后续保留该文件夹。</li>
+    <li>日常无需任何额外操作。如再遇到「只出一张」或其它异常，保留当次记录并联系即可。</li>
+  </ul>
+</section>
+
+<div class="end">水洗唛打印助手 · 维护记录 · 2026-09-22</div>
+
+</div>
+</body>
+</html>
