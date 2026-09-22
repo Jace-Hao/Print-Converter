@@ -3,7 +3,8 @@
 
 一个进程同时提供：
   1. 后台监视（watcher）：虚拟打印机捕获 → 转换 → 送印 → 归档；
-  2. 本地操作页面：http://127.0.0.1:8787/（仅本机可访问，零外部依赖）。
+  2. 本地操作页面：http://127.0.0.1:8787/（仅本机可访问，零外部依赖）；
+  3. 每日清理：归档 / 预览超过保留天数(默认 7 天)的文件自动删除。
 
 启动：pythonw -X utf8 -m app.console run   （后台静默运行，经「打开操作页面.cmd」拉起）
 停止：结束该进程（见「停止软件.cmd」）
@@ -238,6 +239,21 @@ def _make_handler():
 
 
 # ---------------- 运行 ----------------
+def _daily_cleanup_loop(cfg, log):
+    """每日清理线程: 启动时先执行一次, 之后每天(日期变化)执行一次"""
+    last = None
+    while True:
+        today = time.strftime("%Y-%m-%d")
+        if today != last:
+            try:
+                from app import retention
+                retention.cleanup(cfg, log)
+            except Exception as e:
+                log.warning("每日清理异常: %s", e)
+            last = today
+        time.sleep(600)
+
+
 def run(argv=None):
     cfg, log = _setup()
     existing = find_instance()
@@ -262,6 +278,7 @@ def run(argv=None):
     STATE.update({"cfg": cfg, "log": log, "port": port, "watcher": watcher,
                   "started": time.strftime("%Y-%m-%d %H:%M:%S")})
     threading.Thread(target=watcher.run, name="watcher", daemon=True).start()
+    threading.Thread(target=_daily_cleanup_loop, args=(cfg, log), name="daily-cleanup", daemon=True).start()
     log.info("软件已启动（后台运行）。操作页面: http://127.0.0.1:%d/", port)
     try:
         server.serve_forever()

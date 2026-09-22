@@ -9,6 +9,7 @@
   python -m app.cli vp [install|uninstall|status]  虚拟打印机(水洗唛打印助手)
   python -m app.cli info <pdf>                PDF 页面几何信息
   python -m app.cli calibrate                打印旋转方向校准标签(两版)
+  python -m app.cli cleanup                  立即清理归档/预览中的过期文件
 """
 import argparse
 import json
@@ -151,6 +152,15 @@ def cmd_calibrate(args, cfg, log):
         cfg["pipeline"]["rotate_dir"] = old
 
 
+def cmd_cleanup(args, cfg, log):
+    from app import retention
+
+    n = retention.cleanup(cfg, log, force=True)
+    print(json.dumps({"ok": True, "removed": n,
+                      "days": (cfg.get("cleanup") or {}).get("days", 7)},
+                     ensure_ascii=False))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="水洗唛打印助手")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -182,6 +192,9 @@ def main(argv=None):
 
     p = sub.add_parser("calibrate", help="打印旋转方向校准标签")
     p.set_defaults(func=cmd_calibrate)
+
+    p = sub.add_parser("cleanup", help="立即清理归档/预览中的过期文件")
+    p.set_defaults(func=cmd_cleanup)
 
     args = ap.parse_args(argv)
     cfg, log = _setup()

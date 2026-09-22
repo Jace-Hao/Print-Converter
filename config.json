@@ -66,6 +66,10 @@
     "mode": "auto",
     "close_pdffactory_window": true
   },
+  "cleanup": {
+    "enabled": true,
+    "days": 7
+  },
   "paths": {
     "archive": "out\\archive",
     "logs": "out\\logs",

@@ -53,6 +53,10 @@ DEFAULTS = {
         "mode": "auto",               # auto | dry_run（dry_run 只预览不打印）
         "close_pdffactory_window": True,   # 打印后自动关掉 pdfFactory 弹出窗口
     },
+    "cleanup": {                      # 每日自动清理(归档 / 预览)
+        "enabled": True,
+        "days": 7,                    # 保留最近天数(0 = 每次清理时清空)
+    },
     "paths": {
         "archive": "out\\archive",
         "logs": "out\\logs",
