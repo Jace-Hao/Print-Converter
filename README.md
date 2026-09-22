@@ -7,7 +7,7 @@
 
 ## 一键安装（推荐）
 
-从 [Releases](https://github.com/Jace-Hao/Print-Converter/releases) 下载 **`水洗唛打印助手-安装包-v2.1.exe`**：
+从 [Releases](https://github.com/Jace-Hao/Print-Converter/releases) 下载安装包（资源名 **`Print-Converter-Setup-v2.1.exe`**）：
 
 1. 双击安装包 → 选择安装目录 → 完成（约 1 分钟）；
 2. 安装程序自动完成：虚拟打印机「水洗唛打印助手」、开机自启、配置初始化、快捷方式；
