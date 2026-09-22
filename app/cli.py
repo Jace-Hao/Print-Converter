@@ -10,6 +10,7 @@
   python -m app.cli info <pdf>                PDF 页面几何信息
   python -m app.cli calibrate                打印旋转方向校准标签(两版)
   python -m app.cli cleanup                  立即清理归档/预览中的过期文件
+  python -m app.cli init                     安装后初始化(规范化配置路径)
 """
 import argparse
 import json
@@ -161,6 +162,27 @@ def cmd_cleanup(args, cfg, log):
                      ensure_ascii=False))
 
 
+def cmd_init(args, cfg, log):
+    """安装后初始化: 按当前机器规范化 config.json(用户目录 / 相对路径), 并建好目录"""
+    home = os.path.expanduser("~")
+    d = cfg.data
+    cap = d.setdefault("capture", {})
+    cap["slot_file"] = "spool\\capture.pdf"  # 固定为相对路径, 跟随安装目录
+    watch = d.setdefault("watch", {})
+    dirs = [x for x in (watch.get("dirs") or [])
+            if not (("Documents" in x) and ("PDF files" in x))
+            and not x.rstrip("\\").lower().endswith("inbox")]
+    dirs.insert(0, os.path.join(home, "Documents", "PDF files", "自动保存"))
+    dirs.append(os.path.join(cfg.root, "inbox"))
+    watch["dirs"] = dirs
+    cfg.save()
+    for k in ("archive", "previews", "logs"):
+        os.makedirs(cfg.path_of(k), exist_ok=True)
+    os.makedirs(os.path.join(cfg.root, "spool"), exist_ok=True)
+    print(json.dumps({"ok": True, "config": cfg.path, "watch_dirs": dirs,
+                      "note": "如需调整请编辑 config.json 后重启软件"}, ensure_ascii=False, indent=2))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="水洗唛打印助手")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -195,6 +217,9 @@ def main(argv=None):
 
     p = sub.add_parser("cleanup", help="立即清理归档/预览中的过期文件")
     p.set_defaults(func=cmd_cleanup)
+
+    p = sub.add_parser("init", help="安装后初始化（规范化配置路径）")
+    p.set_defaults(func=cmd_init)
 
     args = ap.parse_args(argv)
     cfg, log = _setup()

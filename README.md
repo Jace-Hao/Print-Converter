@@ -5,7 +5,19 @@
 
 > 版本 v2.1（2026-09-22）· 更新记录见 [CHANGELOG.md](CHANGELOG.md)
 
-## 运行环境
+## 一键安装（推荐）
+
+从 [Releases](https://github.com/Jace-Hao/Print-Converter/releases) 下载 **`水洗唛打印助手-安装包-v2.1.exe`**：
+
+1. 双击安装包 → 选择安装目录 → 完成（约 1 分钟）；
+2. 安装程序自动完成：虚拟打印机「水洗唛打印助手」、开机自启、配置初始化、快捷方式；
+3. 安装后双击桌面/开始菜单的「打开操作页面」即可使用。
+
+> 安装包已内嵌独立运行环境，**无需预装 Python 或其它软件**；卸载通过「控制面板 → 应用」或开始菜单卸载项完成。
+
+## 运行环境（免安装 / 开发部署）
+
+> 使用一键安装包时无需本节内容（运行时已内嵌）。
 
 - Windows 10 / 11 + Python 3.10+（本机为 3.14）；依赖安装：`pip install -r requirements.txt`
 - 虚拟打印机「水洗唛打印助手」：由安装脚本一键创建（系统内置 PDF 驱动，无需额外软件）
@@ -50,6 +62,8 @@
 | `打印校准唛.cmd` / `把PDF拖到这里处理.cmd` | 校准 / 手动处理单个 PDF |
 | `安装虚拟打印机.cmd` / `卸载虚拟打印机.cmd` | 虚拟打印机的安装与卸载 |
 | `安装开机自启.ps1` / `卸载开机自启.ps1` | 开机自启的安装与卸载 |
+| `卸载清理.ps1` | 卸载清理：停止本目录服务 / 移除本目录的自启与虚拟打印机（安全限定，不影响其它安装） |
+| `构建工具\安装包\` | 安装包构建：Inno Setup 工程 + 一键构建脚本（可复现） |
 | `extras\` | 未启用的可选组件存档（布局设计器等，原样保留） |
 | `docs_build\` | 《使用说明与交付报告.docx》生成脚本（备用） |
 | `开发工具\` | 可选开发脚本：版面实验室 |
@@ -65,6 +79,8 @@ python -m app.cli once 文件.pdf    # 处理单个文件（--dry-run 只预览�
 python -m app.cli calibrate        # 打印两版校准唛
 python -m app.cli printers         # 打印机与分辨率信息
 python -m app.cli vp status        # 虚拟打印机状态（install/uninstall 安装卸载）
+python -m app.cli cleanup          # 立即清理归档/预览过期文件
+python -m app.cli init             # 安装后初始化（规范化配置路径）
 python -m app.cli info 文件.pdf    # PDF 页面几何信息
 ```
 

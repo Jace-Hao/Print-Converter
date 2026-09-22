@@ -43,6 +43,10 @@ def _setup():
 
 
 def _pythonw():
+    # 安装版优先用随附运行时；否则用当前解释器同目录 / 本机 Python
+    root_pw = os.path.join(ROOT, "runtime", "pythonw.exe")
+    if os.path.exists(root_pw):
+        return root_pw
     exe = sys.executable or ""
     pw = os.path.join(os.path.dirname(exe), "pythonw.exe")
     if not os.path.exists(pw):

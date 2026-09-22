@@ -10,6 +10,8 @@ if %errorlevel% neq 0 (
 )
 echo 正在卸载虚拟打印机「水洗唛打印助手」...
 echo.
-"%LOCALAPPDATA%\Python\bin\python.exe" -X utf8 -m app.vpinstall uninstall
+set "PY=%~dp0runtime\python.exe"
+if not exist "%PY%" set "PY=%LOCALAPPDATA%\Python\bin\python.exe"
+"%PY%" -X utf8 -m app.vpinstall uninstall
 echo.
 pause >nul

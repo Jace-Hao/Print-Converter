@@ -6,7 +6,7 @@ try {
 } catch {
   Write-Host ('未找到任务或权限不足：' + $_.Exception.Message)
 }
-Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'app\.console|app\.cli watch' } | ForEach-Object {
+Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^(python|pythonw)' -and $_.CommandLine -match 'app\.console|app\.cli watch' } | ForEach-Object {
   Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
   Write-Host ('已停止后台进程 PID ' + $_.ProcessId)
 }

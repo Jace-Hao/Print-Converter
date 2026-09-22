@@ -19,3 +19,5 @@ inbox/*
 .openclaw/
 Thumbs.db
 desktop.ini
+.build/
+dist/
