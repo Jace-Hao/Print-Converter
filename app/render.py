@@ -41,7 +41,8 @@ def render_pdf_pages(pdf_path, dpi, capture_crop=None, capture_shift=(0.0, 0.0))
         else:
             pix = page.get_pixmap(dpi=dpi)
             img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-        pages.append({"img": img, "w_mm": w_mm, "h_mm": h_mm, "captured": captured})
+        pages.append({"img": img, "w_mm": w_mm, "h_mm": h_mm, "captured": captured,
+                      "text": page.get_text() or ""})
     doc.close()
     return pages
 

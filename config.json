@@ -70,6 +70,15 @@
     "enabled": true,
     "days": 7
   },
+  "skip_print": {
+    "enabled": true,
+    "keywords": [
+      "布草",
+      "洗涤服务",
+      "窗帘",
+      "窗纱"
+    ]
+  },
   "paths": {
     "archive": "out\\archive",
     "logs": "out\\logs",

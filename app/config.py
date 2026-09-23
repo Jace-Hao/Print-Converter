@@ -57,6 +57,10 @@ DEFAULTS = {
         "enabled": True,
         "days": 7,                    # 保留最近天数(0 = 每次清理时清空)
     },
+    "skip_print": {                   # 命中关键词的标签不打印(仅归档 / 预览)
+        "enabled": True,
+        "keywords": ["布草", "洗涤服务", "窗帘", "窗纱"],
+    },
     "paths": {
         "archive": "out\\archive",
         "logs": "out\\logs",

@@ -185,7 +185,11 @@ class Watcher:
                 self.pending.pop(path, None)
                 acted += 1
                 self._maybe_close_windows()
-                self.log.info("完成: %s -> %s 个标签", os.path.basename(path), len(res.get("labels", [])))
+                labels = res.get("labels", [])
+                skipped = sum(1 for x in labels if x.get("skipped"))
+                printed = len(labels) - skipped
+                tail = ("（跳过 %d）" % skipped) if skipped else ""
+                self.log.info("完成: %s -> %d 个标签%s", os.path.basename(path), printed, tail)
             except Exception as e:
                 self.log.exception("处理失败 %s: %s", path, e)
         if acted:
@@ -201,7 +205,11 @@ class Watcher:
         dry = self.cfg["automation"].get("mode") == "dry_run"
         res = process_pdf(self.cfg, self.log, path, dry_run=dry)
         self._maybe_close_windows()
-        self.log.info("完成(虚拟打印机): %s -> %s 个标签", os.path.basename(path), len(res.get("labels", [])))
+        labels = res.get("labels", [])
+        skipped = sum(1 for x in labels if x.get("skipped"))
+        printed = len(labels) - skipped
+        tail = ("（跳过 %d）" % skipped) if skipped else ""
+        self.log.info("完成(虚拟打印机): %s -> %d 个标签%s", os.path.basename(path), printed, tail)
 
     def stop(self):
         """请求停止监视(供后台服务退出时调用)"""

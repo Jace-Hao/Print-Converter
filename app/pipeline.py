@@ -2,6 +2,7 @@
 """水洗唛打印助手 - 处理管道: PDF -> 旋转排版 -> 打印 -> 归档"""
 import datetime
 import os
+import re
 import shutil
 
 from .render import render_pdf_pages, compose_label
@@ -17,6 +18,9 @@ def process_pdf(cfg, log, pdf_path, dry_run=False):
     pl = cfg["pipeline"]
     pr = cfg["print"]
     cap = cfg.get("capture") or {}
+    sk = cfg.get("skip_print") or {}
+    skip_on = bool(sk.get("enabled", True))
+    skip_kws = [re.sub(r"\s+", "", str(k)) for k in (sk.get("keywords") or []) if str(k)]
     os.makedirs(cfg.path_of("previews"), exist_ok=True)
     pages = render_pdf_pages(
         pdf_path, int(pl["render_dpi"]),
@@ -34,7 +38,13 @@ def process_pdf(cfg, log, pdf_path, dry_run=False):
         prev = os.path.join(cfg.path_of("previews"), "%s_%s_p%d.png" % (base, _ts(), i + 1))
         mono.save(prev)
         info["preview"] = prev
-        if dry_run:
+        flat = re.sub(r"\s+", "", page.get("text") or "")
+        hit = next((k for k in skip_kws if k in flat), None) if (skip_on and flat) else None
+        if hit:
+            info["skipped"] = True
+            info["skip_keyword"] = hit
+            log.info("第 %d 页命中不打印关键词「%s」→ 跳过打印（仍保留预览与归档）", i + 1, hit)
+        elif dry_run:
             log.info("dry_run: 跳过打印, 预览=%s", prev)
         else:
             print_image(pr["printer"], mono, doc_name="水洗唛-" + base, copies=int(pr["copies"]))
