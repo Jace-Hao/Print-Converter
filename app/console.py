@@ -104,6 +104,7 @@ def collect_status(cfg):
         },
         "vprinter": {}, "capture": {}, "recent": [], "log_tail": [],
     }
+    st["rotate_dir"] = (cfg.get("pipeline") or {}).get("rotate_dir", "cw")
     st["vprinter"] = _vp_status_cached()
     try:
         slot = (cfg.get("capture") or {}).get("slot_file", "spool\\capture.pdf")
@@ -162,6 +163,23 @@ def do_action(cfg, log, name, arg=None):
         os.makedirs(p, exist_ok=True)
         os.startfile(p)
         return {"ok": True, "msg": "已打开目录"}
+    if name == "set_rotate":
+        d = str(arg or "").strip().lower()
+        if d not in ("cw", "ccw"):
+            return {"ok": False, "msg": "无效方向: %s（仅支持 cw / ccw）" % arg}
+        pl = cfg["pipeline"]
+        old = pl.get("rotate_dir", "cw")
+        pl["rotate_dir"] = d
+        try:
+            cfg.save()
+        except Exception as e:
+            pl["rotate_dir"] = old
+            return {"ok": False, "msg": "保存配置失败，已保持原方向: %s" % e}
+        log.info("打印方向已切换: %s -> %s（即时生效）",
+                 "顺时针" if old == "cw" else "逆时针",
+                 "顺时针" if d == "cw" else "逆时针")
+        return {"ok": True, "rotate_dir": d,
+                "msg": "已切换为%s，立即生效（下一条标签按新方向打印）" % ("顺时针" if d == "cw" else "逆时针")}
     if name == "vp_check":
         STATE["vp_cache"] = None
         return {"ok": True, "data": _vp_status_cached()}

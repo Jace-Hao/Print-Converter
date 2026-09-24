@@ -9,7 +9,7 @@
   1. 配色：改下方 <style> 里 :root 的 CSS 变量（--accent 主色等）；
   2. 文案：直接改正文里的中文文字；
   3. 数据：页面每 3 秒自动请求 /api/status（由 app/console.py 提供）。
-  说明：本页面只用于“操作与查看”，不包含任何编辑功能。
+  说明：本页面用于“操作与查看”，不含内容编辑；打印方向可在「打印方向」卡片一键切换。
 ======================================================================= -->
 <style>
   :root{
@@ -112,6 +112,15 @@
     </section>
 
     <section class="card">
+      <h2>打印方向（条码旋转）</h2>
+      <div class="btns">
+        <button id="rot-cw" onclick="setRot('cw')">顺时针 90°</button>
+        <button id="rot-ccw" onclick="setRot('ccw')">逆时针 90°</button>
+      </div>
+      <div class="hint">当前：<b id="rot-cur">–</b>。出纸方向不对时：先点「打印校准唛（两版）」对照，再在这里选一致的方向——切换后立即生效，无需重启。</div>
+    </section>
+
+    <section class="card">
       <h2>最近处理（归档）</h2>
       <ul class="list" id="recent"><li><span>暂无记录</span></li></ul>
     </section>
@@ -154,6 +163,10 @@ async function refresh(){
     $('vp-printer').innerHTML = vp.printer_ok
       ? '<span class="good">就绪</span>' : '<span class="bad">未就绪（可点击「安装 / 修复」）</span>';
     $('vp-port').innerHTML = (vp.port_ok ? '<span class="good">就绪</span>' : '<span class="bad">未就绪</span>') + '　' + esc(vp.port || '');
+    const rd = (st.rotate_dir === 'ccw') ? 'ccw' : 'cw';
+    $('rot-cw').className = (rd === 'cw') ? 'primary' : '';
+    $('rot-ccw').className = (rd === 'ccw') ? 'primary' : '';
+    $('rot-cur').textContent = (rd === 'cw') ? '顺时针 90°' : '逆时针 90°';
     const rc = $('recent');
     if((st.recent || []).length){
       rc.innerHTML = st.recent.map(x => '<li><span>' + esc(x.name) + '</span><span class="t">' + esc(x.time) + '</span></li>').join('');
@@ -179,6 +192,23 @@ async function act(name, confirmFirst, arg){
   busy = false;
   document.querySelectorAll('button').forEach(b => b.disabled = false);
   setTimeout(refresh, 600);
+}
+
+async function setRot(dir){
+  if(busy) return;
+  const label = (dir === 'cw') ? '顺时针 90°' : '逆时针 90°';
+  if(!confirm('确定把打印方向切换为「' + label + '」吗？\n切换后立即生效，下一条标签即按新方向打印。')) return;
+  busy = true;
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try{
+    const r = await fetch('/api/action', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name:'set_rotate', arg: dir})});
+    const j = await r.json();
+    toast((j.ok ? '已切换：' : '操作失败：') + (j.msg || ''));
+  }catch(e){ toast('操作失败：' + e.message); }
+  busy = false;
+  document.querySelectorAll('button').forEach(b => b.disabled = false);
+  setTimeout(refresh, 500);
 }
 
 refresh();

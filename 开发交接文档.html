@@ -146,12 +146,12 @@
 
 <section>
   <div class="sec-head"><span class="sec-num">04</span><h2>运行与维护</h2></div>
-  <p>日常操作：双击「打开操作页面.cmd」→ 浏览器打开操作页面（状态、虚拟打印机检测 / 修复、打印校准唛、打开目录、最近处理、日志）。</p>
+  <p>日常操作：双击「打开操作页面.cmd」→ 浏览器打开操作页面（状态、虚拟打印机检测 / 修复、打印校准唛、切换打印方向、打开目录、最近处理、日志）。</p>
   <h3>config.json 关键项</h3>
   <table>
     <thead><tr><th>项</th><th>默认</th><th>说明</th></tr></thead>
     <tbody>
-      <tr><td><code>pipeline.rotate_dir</code></td><td>cw</td><td>旋转方向（顺时针 / 逆时针，待现场目检确认）</td></tr>
+      <tr><td><code>pipeline.rotate_dir</code></td><td>cw</td><td>旋转方向（顺时针 / 逆时针；可在操作页面「打印方向」切换，即时生效）</td></tr>
       <tr><td><code>capture.crop_mm</code> / <code>shift_mm</code></td><td>[0,0,120,30] / [2.03,0]</td><td>截取与对齐补偿（校准时调整）</td></tr>
       <tr><td><code>print.printer</code></td><td>水洗唛</td><td>目标标签机</td></tr>
       <tr><td><code>cleanup.days</code></td><td>7</td><td>归档 / 预览保留天数（0 = 每次清理时清空）</td></tr>
@@ -176,7 +176,7 @@ python -m app.cli info 文件.pdf  # PDF 页面几何信息</div>
       <tr><td>打印机不见了</td><td>双击「安装虚拟打印机.cmd」重装；或操作页面 →「虚拟打印机」检测 / 修复</td></tr>
       <tr><td>页面打不开</td><td>双击「打开操作页面.cmd」（会确保服务在运行）；端口被占用会自动尝试相邻端口</td></tr>
       <tr><td>某类打印没自动出</td><td>内容不在标签区域的文件会被安全闸移入 <code>out\hold</code>（防止误打），人工确认后处理</td></tr>
-      <tr><td>标签方向不对</td><td>改 <code>pipeline.rotate_dir</code> 后重启软件（先打校准唛对比）</td></tr>
+      <tr><td>标签方向不对</td><td>操作页面 →「打印方向」一键切换（即时生效；先打校准唛对比）</td></tr>
     </tbody>
   </table>
 </section>
@@ -210,7 +210,7 @@ python -m app.cli info 文件.pdf  # PDF 页面几何信息</div>
 <section>
   <div class="sec-head"><span class="sec-num">07</span><h2>已知限制与注意事项</h2></div>
   <ul>
-    <li><b class="k">旋转方向</b>：出厂默认顺时针（cw），需现场目检校准唛后最终确认（改配置即可，不涉及代码）。</li>
+    <li><b class="k">旋转方向</b>：出厂默认顺时针（cw），可在操作页面「打印方向」切换（即时生效并写回 config.json）。</li>
     <li><b class="k">单实例</b>：同机只允许一个服务实例；多份安装共用同一虚拟打印机与自启项（会指向最新安装的目录）。</li>
     <li><b class="k">捕获为覆盖式写入</b>：60ms 轮询已实测连打不丢；极端情况可按 <code>out\archive</code> 记录补打。</li>
     <li><b class="k">旧通道兜底</b>：pdfFactory 自动保存目录仍被监听（兼容历史流程）。</li>
