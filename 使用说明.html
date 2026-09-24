@@ -150,6 +150,10 @@
     body{background:#FEFDFB}
     a{color:var(--ink)}
   }
+
+    figure { margin: 26px 0; text-align: center; }
+    figure img { max-width: 100%; height: auto; border: 1px solid #E5E7EB; border-radius: 12px; }
+    figure figcaption { font-size: 13px; color: #6B7280; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -411,6 +415,7 @@
           <div class="qa"><p class="q">归档和预览会一直堆积吗？</p><p class="a">不会。每天自动清理一次，仅保留最近 7 天（天数可在 <code>config.json</code> 的 <code>cleanup.days</code> 调整；设为 0 表示每次清理时清空）。</p></div>
           <div class="qa"><p class="q">某些打印内容没有自动输出？</p><p class="a">内容不在标签区域内的文件会被安全闸拦下（移入 <code>out\hold</code>），防止误打。</p></div>
           <div class="qa"><p class="q">为什么有的水洗唛没有打印？</p><p class="a">布草 / 洗涤服务 / 窗帘 / 窗纱等命中「不打印关键词」的标签会自动跳过打印（仍保留在归档与预览中，便于核对）；关键词可在 <code>config.json</code> 的 <code>skip_print</code> 中调整。</p></div>
+          <figure><img src="assets/不打印关键词判定流程.png" width="960" alt="不打印关键词判定流程：命中布草 / 洗涤服务 / 窗帘 / 窗纱的标签跳过打印，其余正常打印"><figcaption>不打印关键词的判定流程：命中时跳过打印并保留归档与预览；未命中正常打印。</figcaption></figure>
           <div class="qa"><p class="q">电脑重启后需要手动启动吗？</p><p class="a">不需要。已设置开机自启，登录电脑后软件会自动在后台运行（无窗口）。</p></div>
           <div class="qa"><p class="q">会不会影响洗衣管家？</p><p class="a">不会。工具不修改洗衣管家程序与数据，仅使用打印链路。</p></div>
         </div>
