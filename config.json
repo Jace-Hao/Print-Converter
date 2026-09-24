@@ -68,7 +68,7 @@
   },
   "cleanup": {
     "enabled": true,
-    "days": 7
+    "days": 1
   },
   "skip_print": {
     "enabled": true,
