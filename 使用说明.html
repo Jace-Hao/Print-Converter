@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>水洗唛打印助手 · 使用说明与交付报告</title>
-<meta name="description" content="洗衣管家水洗唛自动旋转打印工具——使用说明与交付报告（v2.1）">
+<meta name="description" content="洗衣管家水洗唛自动旋转打印工具——使用说明与交付报告（v2.2）">
 <style>
   :root{
     --bg:#FAF8F4;
@@ -160,14 +160,14 @@
 <div class="page">
 
   <header class="cover">
-    <p class="kicker">Wash Label Print Assistant · v2.1</p>
+    <p class="kicker">Wash Label Print Assistant · v2.2</p>
     <h1>水洗唛打印助手</h1>
     <p class="sub">使用说明与交付报告</p>
     <hr class="rule-accent">
     <dl class="cover-meta">
       <div><dt>交付对象</dt><dd>星期衣精致洗衣 · 门店工作机</dd></div>
       <div><dt>交付日期</dt><dd>2026 年 9 月 22 日</dd></div>
-      <div><dt>工具版本</dt><dd>v2.1（Python 3.14）</dd></div>
+      <div><dt>工具版本</dt><dd>v2.2（Python 3.14）</dd></div>
       <div><dt>部署位置</dt><dd>E:\软件开发\水洗唛打印助手</dd></div>
     </dl>
   </header>
@@ -215,7 +215,7 @@
         <h2><span class="no">02</span>背景与方案设计</h2>
         <h3>2.1　原有流程的问题</h3>
         <p>原流程需要人工执行四个步骤：打印预览、另存为 PDF、旋转 90 度、再发送到标签机。存在三个问题：一是操作繁琐，每张标签都要重复；二是旋转依靠人工判断，容易方向出错；三是中间 PDF 分散各处，日后补打、对账不便。v1.0 曾借助第三方虚拟打印机的自动保存目录完成捕获，但依赖外部软件（pdfFactory）的配置，链路较长。</p>
-        <h3>2.2　自动化方案（v2.1 架构）</h3>
+        <h3>2.2　自动化方案（v2.2 架构）</h3>
         <p>工具采用「自建虚拟打印机」架构：由工具创建一台专属虚拟打印机「水洗唛打印助手」（基于 Windows 内置的 Microsoft Print To PDF 驱动 + 文件端口）。洗衣管家打印水洗唛时选择该打印机，打印任务会被静默写成一个捕获文件；工具以高频监视捕获文件的每个新版本，自动完成 截取标签区域 → 版面对齐 → 旋转排版 → 送印 → 归档 全流程。整个过程不再经过 pdfFactory 等第三方软件，链路更短、更稳定。</p>
         <p>v2.1 起，软件以「后台服务」方式常驻运行（开机自动启动、无窗口），并配套一个本地「操作页面」：查看运行状态、打印校准唛、打开各目录、查看日志都在这里完成。同时下线了页面编辑类功能，只保留最基本的打印转换能力。</p>
         <figure>
@@ -487,7 +487,7 @@
   </div>
 
   <footer class="colophon">
-    <p>水洗唛打印助手 · 使用说明与交付报告 · v2.1 · 2026 年 9 月 22 日 — 本文件为单文件 HTML，可直接双击打开或打印；同内容 Word 版本见《使用说明与交付报告.docx》。</p>
+    <p>水洗唛打印助手 · 使用说明与交付报告 · v2.2 · 2026 年 10 月 9 日 — 本文件为单文件 HTML，可直接双击打开或打印；同内容 Word 版本见《使用说明与交付报告.docx》。</p>
   </footer>
 
 </div>

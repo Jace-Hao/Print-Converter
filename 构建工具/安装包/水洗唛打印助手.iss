@@ -1,9 +1,9 @@
 ﻿; 水洗唛打印助手 — Inno Setup 安装包脚本
 ; 编译：iscc 水洗唛打印助手.iss    （或运行同目录 build_installer.ps1）
-; 产物：..\..\dist\水洗唛打印助手-安装包-v2.1.exe
+; 产物：..\..\dist\水洗唛打印助手-安装包-v2.2.exe
 
 #define MyAppName "水洗唛打印助手"
-#define MyAppVersion "2.1"
+#define MyAppVersion "2.2"
 #define MyAppPublisher "星期衣精致洗衣"
 
 [Setup]
@@ -20,13 +20,13 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 OutputDir=..\..\dist
-OutputBaseFilename=水洗唛打印助手-安装包-v2.1
+OutputBaseFilename=水洗唛打印助手-安装包-v2.2
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName={#MyAppName}
 SetupLogging=yes
-VersionInfoVersion=2.1.0.0
+VersionInfoVersion=2.2.0.0
 VersionInfoDescription={#MyAppName} 安装程序
 VersionInfoProductName={#MyAppName}
 

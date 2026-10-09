@@ -78,7 +78,7 @@
   <div class="sec-head"><span class="sec-num">01</span><h2>项目速览</h2></div>
   <ul>
     <li><b class="k">一句话</b>：把洗衣管家打印的水洗唛（120×30mm 横版）自动转换为门店标签机（佳博 GP-9134T）的出纸规格（30×120mm 竖版）并完成打印与归档。</li>
-    <li><b class="k">仓库</b>：<code>https://github.com/Jace-Hao/Print-Converter</code>；<b class="k">发布页</b>：<code>.../releases/tag/v2.1</code>（含安装包）。</li>
+    <li><b class="k">仓库</b>：<code>https://github.com/Jace-Hao/Print-Converter</code>；<b class="k">发布页</b>：<code>.../releases/tag/v2.2</code>（含安装包）。</li>
     <li><b class="k">当前状态</b>：v2.1 已在门店工作机常驻运行（后台服务 + 操作页面 + 开机自启）；一键安装包已发布。v2.2 为增量更新（本机打印机状态检测 + 关键词排除打印维护 + 配置零容错），代码已就绪并完成回归（见 §4）。</li>
     <li><b class="k">本地位置</b>：开发副本 <code>E:\软件开发\水洗唛打印助手</code>；安装版目录可选（默认 <code>C:\水洗唛打印助手</code>）。</li>
   </ul>
@@ -253,12 +253,16 @@ python -m app.printerstatus    # 本机打印机状态自检（可带打印机�
   <div class="sec-head"><span class="sec-num">05</span><h2>构建与发布（一键安装包）</h2></div>
   <ul>
     <li><b class="k">构建</b>：<code>构建工具\安装包\build_installer.ps1</code>；前置 = Inno Setup 6；<b class="k">首次构建需要网络</b>（自动下载嵌入式 Python 运行时并安装依赖）。参数：<code>-RuntimeFrom</code>（复用已有运行时）/ <code>-SkipRuntime</code>。产物在 <code>dist\</code>。</li>
-    <li><b class="k">当前安装包</b>：<code>水洗唛打印助手-安装包-v2.1.exe</code>；SHA256 <code>12C683E3…C1ABAAB</code>（完整值见《安装部署说明》）。</li>
-    <li><b class="k">发布</b>：GitHub Release 上传（tag v2.1）。注意：发布平台资源名不支持中文，线上资源名为 <code>Print-Converter-Setup-v2.1.exe</code>。</li>
+    <li><b class="k">当前安装包</b>：<code>水洗唛打印助手-安装包-v2.2.exe</code>；38.4 MB（40,257,208 字节）；SHA256 <code>f5bcb0ef…f459bb0</code>（完整值见《安装部署说明》）。</li>
+    <li><b class="k">发布</b>：GitHub Release 上传（tag v2.2）。注意：发布平台资源名不支持中文，线上资源名为 <code>Print-Converter-Setup-v2.2.exe</code>。</li>
   </ul>
   <div class="callout">
     <span class="lbl">构建踩坑沉淀（重构时注意）</span>
     <p>① <code>.cmd</code> 必须 CRLF 行尾（LF + 中文 + chcp 会被解析出杂音命令）；② <code>.ps1</code> 需 UTF-8 BOM；③ 内嵌运行时 <code>._pth</code> 需含 <code>..</code>；④ 卸载清理的进程匹配先限定 <code>Name=python*</code>；⑤ 静默测试：<code>/VERYSILENT /TASKS="" /DIR=... /LOG=...</code>。</p>
+  </div>
+  <div class="callout">
+    <span class="lbl">构建与冒烟测试注意事项（每次发布重复构建前先看这条）</span>
+    <p>① <code>.iss</code> 使用<b class="k">固定 AppId</b>（<code>{A7C4E3B1-…}</code>），且 <code>[Icons]</code> 写在<b class="k">公共开始菜单</b> <code>{autoprograms}</code>，这几个快捷方式<b class="k">不带 Tasks 条件</b>——因此 <code>/MERGETASKS</code> 取消不掉：在已有部署的机器上做静默安装冒烟时，会覆盖真实部署的快捷方式，卸载时又会被一并删除，卸载注册表项同样会被覆盖 / 删除。② 建议冒烟测试改用 .iss 副本 + <b class="k">独立 AppId</b> + <code>{userprograms}</code>，与正式交付脚本隔离，避免碰到共享的开始菜单与卸载注册项。③ 实测有效的取消任务写法：<code>/MERGETASKS="!任务名,!任务名"</code>（逗号分隔，<code>!</code> 前缀表示取消），配合 <code>/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=&lt;临时目录&gt;</code> 使用；注意只对带 Tasks 的条目有效（虚拟打印机 / 开机自启 / 启动软件 / 桌面图标可以取消，开始菜单快捷方式不行）。④ robocopy 组装 payload 时用 <code>/XD</code> 排除<b class="k">开发期噪声</b>：除 <code>.build</code> 等已有排除项外，已加入 <code>.workbuddy</code> 与 <code>__pycache__</code>，防止把工作笔记和字节码缓存打进安装包。</p>
   </div>
 </section>
 
@@ -272,6 +276,7 @@ python -m app.printerstatus    # 本机打印机状态自检（可带打印机�
       <tr><td>v2.1</td><td>2026-09-22</td><td>精简（编辑类下线归档）；操作页面；后台常驻 + 开机自启；每日清理；双张 / 闪窗等修复</td></tr>
       <tr><td>v2.1 安装包</td><td>2026-09-22</td><td>Inno 一键安装：内嵌运行时、目录可选、完整卸载</td></tr>
       <tr><td>v2.2</td><td>2026-10-09</td><td>修复配置损坏导致服务崩溃（零容错 + 自动备份回退）；新增本机打印机状态检测（<code>app\printerstatus.py</code> + 操作台卡片）；操作台可视化维护「关键词排除打印」；接口异常不再 500 + 检测超时保护</td></tr>
+      <tr><td>v2.2 安装包</td><td>2026-10-09</td><td>Inno 一键安装：内嵌独立运行环境、安装目录可选、完整卸载；含本机打印机状态检测与操作台关键词维护</td></tr>
     </tbody>
   </table>
 </section>

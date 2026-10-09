@@ -6,7 +6,7 @@
 #   -RuntimeFrom <目录>   复用已构建好的运行时（跳过下载）
 #   -SkipRuntime          跳过运行时准备（要求 .build\payload\runtime 已存在）
 #   -Iscc <路径>          指定 ISCC.exe（默认 C:\Program Files (x86)\Inno Setup 6\ISCC.exe）
-# 输出：dist\水洗唛打印助手-安装包-v2.1.exe
+# 输出：dist\水洗唛打印助手-安装包-v2.2.exe
 param(
   [string]$RuntimeFrom = '',
   [switch]$SkipRuntime,
@@ -22,7 +22,7 @@ $payload = Join-Path $build 'payload'
 Write-Host '[1/4] 组装程序文件 ->' $payload
 if (Test-Path $payload) { Remove-Item $payload -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $payload | Out-Null
-robocopy $root $payload /E /XD '.git' '.build' 'dist' 'backup' 'out' 'spool' 'docs_build' '开发工具' '文档素材' 'inbox' '构建工具' /XF '.gitignore' /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+robocopy $root $payload /E /XD '.git' '.build' 'dist' 'backup' 'out' 'spool' 'docs_build' '开发工具' '文档素材' 'inbox' '构建工具' '.workbuddy' '__pycache__' /XF '.gitignore' /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -gt 7) { throw ('robocopy 失败: ' + $LASTEXITCODE) }
 
 $runtime = Join-Path $payload 'runtime'
