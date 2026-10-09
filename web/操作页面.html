@@ -9,7 +9,16 @@
   1. 配色：改下方 <style> 里 :root 的 CSS 变量（--accent 主色等）；
   2. 文案：直接改正文里的中文文字；
   3. 数据：页面每 3 秒自动请求 /api/status（由 app/console.py 提供）。
-  说明：本页面用于“操作与查看”，不含内容编辑；打印方向可在「打印方向」卡片一键切换。
+  说明：本页面用于“操作与查看”，不含内容编辑。
+  卡片与数据来源：
+    · 软件状态 / 运行日志  -> /api/status 的 watcher、capture、recent、log_tail
+    · 虚拟打印机           -> /api/status 的 vprinter（动作 vp_check / vp_install）
+    · 本机打印机（出纸）   -> /api/status 的 printer（动作 printer_check 强制刷新）
+    · 打印方向             -> /api/status 的 rotate_dir（动作 set_rotate）
+    · 关键词排除打印       -> /api/status 的 skip_print（动作 skip_toggle / skip_add / skip_del）
+    · 配置异常提示         -> /api/status 的 config_error（非空时顶部显示红色告警条）
+  维护注意：refresh() 每 3 秒重绘页面，关键词卡片仅在“服务端关键词签名变化”时才重绘 chips，
+           输入框（#sk-input）始终不参与重绘，以免用户输入被覆盖。
 ======================================================================= -->
 <style>
   :root{
@@ -44,6 +53,23 @@
   button:disabled{opacity:.55;cursor:not-allowed}
   .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);
         border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0;font-size:12.5px;color:var(--ink2)}
+  .chipx{display:inline-flex;align-items:center;gap:6px;background:var(--chip);
+         border:1px solid var(--line);border-radius:6px;padding:2px 4px 2px 8px;
+         margin:2px 4px 2px 0;font-size:12.5px;color:var(--ink2)}
+  .chipx span{font-weight:400}
+  .chipx .x{border:0;background:transparent;color:var(--muted);padding:0 3px;font:inherit;
+            line-height:1;cursor:pointer;border-radius:4px}
+  .chipx .x:hover{color:var(--err);background:#FBEAE8}
+  .addrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .addrow input{flex:1 1 160px;min-width:140px;font:inherit;padding:8px 10px;
+                border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .addrow input:focus{outline:none;border-color:var(--accent)}
+  .st{display:inline-block;border-radius:6px;padding:2px 8px;font-size:13px}
+  .st.ok{color:var(--ok)}
+  .st.warn{background:#FDF3E3;border:1px solid #E8CFA6;color:var(--warn);font-weight:600}
+  .st.bad{background:#FBEAE8;border:1px solid #E4B8B3;color:var(--err);font-weight:600}
+  .st.error{background:#FBEAE8;border:1px solid #E4B8B3;color:var(--err);font-weight:600}
+  .off{color:var(--muted)}
   .list{margin:0;padding:0;list-style:none;font-size:13px}
   .list li{border-top:1px solid var(--line);padding:7px 0;display:flex;
            justify-content:space-between;gap:10px}
@@ -70,6 +96,7 @@
     <span class="pill" id="pill"><span class="dot"></span><span id="pillText">连接中…</span></span>
   </header>
   <div class="banner" id="banner">与后台服务的连接已断开：请双击工具目录中的「打开操作页面.cmd」重新启动软件。</div>
+  <div class="banner" id="cfgwarn"></div>
 
   <div class="grid">
     <section class="card">
@@ -97,6 +124,38 @@
         <button onclick="act('vp_install')">安装 / 修复</button>
       </div>
       <div class="hint">日常打印水洗唛时，请选择「水洗唛打印助手」这台打印机。</div>
+    </section>
+
+    <section class="card">
+      <h2>本机打印机（真正出纸）</h2>
+      <dl class="kv">
+        <dt>打印机</dt><dd id="pt-name">–</dd>
+        <dt>状态</dt><dd id="pt-status">–</dd>
+        <dt>端口</dt><dd id="pt-port">–</dd>
+        <dt>驱动</dt><dd id="pt-driver">–</dd>
+        <dt>队列作业</dt><dd id="pt-jobs">–</dd>
+        <dt>默认打印机</dt><dd id="pt-default">–</dd>
+        <dt>检测时间</dt><dd id="pt-at">–</dd>
+      </dl>
+      <div class="btns">
+        <button onclick="act('printer_check')">重新检测</button>
+      </div>
+      <div class="hint" id="pt-hint">这里显示实际出纸的那台打印机（佳博 GP-9134T）。状态异常（离线 / 缺纸 / 卡纸 / 暂停等）会用红色标出，先在 Windows「设置 → 打印机」里排查再看这里。</div>
+    </section>
+
+    <section class="card">
+      <h2>关键词排除打印</h2>
+      <div class="btns" style="margin-top:0">
+        <button id="sk-toggle" onclick="skipToggle()">–</button>
+      </div>
+      <div id="sk-chips" style="margin-top:10px"></div>
+      <div class="addrow">
+        <input id="sk-input" type="text" maxlength="30" autocomplete="off"
+               placeholder="输入关键词，回车或点「添加」">
+        <button onclick="skipAdd()">添加</button>
+      </div>
+      <div class="hint">标签文字里命中任一关键词的，会自动跳过打印，只保留归档与预览
+        （例如「布草」「窗帘」这类客户不需要水洗唛的）。修改后立即生效，无需重启；最多 50 条，每条最多 30 字。</div>
     </section>
 
     <section class="card">
@@ -135,6 +194,7 @@
 
 <script>
 let busy = false;
+let skSig = null;   // 服务端关键词签名：只有它变化时才重绘 chips（保护用户输入）
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function size(n){ n = Number(n)||0; return n > 1024 ? (n/1024).toFixed(0) + ' KB' : n + ' B'; }
@@ -163,6 +223,11 @@ async function refresh(){
     $('vp-printer').innerHTML = vp.printer_ok
       ? '<span class="good">就绪</span>' : '<span class="bad">未就绪（可点击「安装 / 修复」）</span>';
     $('vp-port').innerHTML = (vp.port_ok ? '<span class="good">就绪</span>' : '<span class="bad">未就绪</span>') + '　' + esc(vp.port || '');
+    renderPrinter(st.printer || {});
+    renderSkip(st.skip_print || {enabled:true, keywords:[]});
+    const ce = st.config_error || '';
+    $('cfgwarn').textContent = ce;
+    $('cfgwarn').classList.toggle('show', !!ce);
     const rd = (st.rotate_dir === 'ccw') ? 'ccw' : 'cw';
     $('rot-cw').className = (rd === 'cw') ? 'primary' : '';
     $('rot-ccw').className = (rd === 'ccw') ? 'primary' : '';
@@ -177,6 +242,105 @@ async function refresh(){
     $('banner').classList.add('show');
   }
 }
+
+// ---------- 本机打印机 ----------
+function renderPrinter(p){
+  const lv = p.level || 'error';
+  $('pt-name').innerHTML = esc(p.name || '–') + (p.installed ? '' : ' <span class="bad">（未安装）</span>');
+  const txt = p.error ? ('检测失败：' + p.error) : (p.status_text || '未知');
+  $('pt-status').innerHTML = '<span class="st ' + lv + '">' + esc(txt) + '</span>';
+  $('pt-port').textContent = p.port || '–';
+  $('pt-driver').textContent = p.driver || '–';
+  const jobs = Number(p.jobs || 0);
+  $('pt-jobs').innerHTML = jobs > 0
+    ? '<span class="bad">' + jobs + ' 个待打印</span>' : '<span class="good">0（队列空闲）</span>';
+  $('pt-default').textContent = (p.is_default ? '是' : '否');
+  $('pt-at').textContent = p.checked_at || '–';
+  if(p.error){
+    $('pt-hint').textContent = '检测这台打印机时出错：' + p.error
+      + '。常见原因是驱动未装或打印机服务未启动。';
+  }else if(!p.installed){
+    const sim = p.similar || [];
+    $('pt-hint').innerHTML = '本机没有找到这台打印机（只认完全同名的设备）。'
+      + (sim.length ? '<br>本机有名字相近的：' + esc(sim.join('、'))
+                      + '——请核对 config.json 里 print.printer 是否与 Windows 里的名字完全一致。' : '')
+      + '<br>本机可见的打印机：' + esc(((p.printers || []).join('、')) || '（枚举失败）');
+  }else{
+    $('pt-hint').textContent = '这里显示实际出纸的那台打印机（佳博 GP-9134T）。状态异常（离线 / 缺纸 / 卡纸 / 暂停等）会用红色标出。';
+  }
+}
+
+// ---------- 关键词排除打印 ----------
+function skipSig(sk){
+  return (sk.enabled ? '1' : '0') + '|' + (sk.keywords || []).join('');
+}
+function renderSkip(sk){
+  const on = !!sk.enabled;
+  const btn = $('sk-toggle');
+  btn.textContent = on ? '已启用（点击停用）' : '已停用（点击启用）';
+  btn.className = on ? 'primary' : '';
+  const sig = skipSig(sk);
+  if(sig === skSig) return;      // 列表没变：不重绘，避免打扰用户
+  skSig = sig;
+  const box = $('sk-chips');
+  const kws = sk.keywords || [];
+  if(!kws.length){
+    box.innerHTML = '<span class="off">（暂无关键词，命中排除不生效）</span>';
+    return;
+  }
+  // 关键词经 data-kw 传递（先 HTML 转义），避免引号破坏 onclick 里的 JS 字符串
+  box.innerHTML = kws.map(k =>
+    '<span class="chipx"><span>' + esc(k) + '</span>'
+    + '<button class="x" title="删除" data-kw="' + esc(k) + '"'
+    + ' onclick="skipDel(this.getAttribute(\'data-kw\'))">×</button></span>'
+  ).join('');
+}
+async function post(name, arg){
+  const r = await fetch('/api/action', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name: name, arg: arg})});
+  return await r.json();
+}
+async function skipToggle(){
+  if(busy) return;
+  busy = true;
+  try{
+    const j = await post('skip_toggle');
+    toast((j.ok ? '操作已执行：' : '操作失败：') + (j.msg || ''));
+    if(j.ok && j.data) renderSkip(j.data);
+  }catch(e){ toast('操作失败：' + e.message); }
+  busy = false;
+  setTimeout(refresh, 500);
+}
+async function skipAdd(){
+  if(busy) return;
+  const inp = $('sk-input');
+  const kw = (inp.value || '').trim();
+  if(!kw){ toast('请先输入关键词'); inp.focus(); return; }
+  busy = true;
+  try{
+    const j = await post('skip_add', kw);
+    toast((j.ok ? '操作已执行：' : '操作失败：') + (j.msg || ''));
+    if(j.ok){ inp.value = ''; if(j.data) renderSkip(j.data); }
+  }catch(e){ toast('操作失败：' + e.message); }
+  busy = false;
+  inp.focus();
+  setTimeout(refresh, 500);
+}
+async function skipDel(kw){
+  if(busy) return;
+  if(!confirm('确定删除关键词「' + kw + '」吗？\n删除后，含该词的标签会恢复打印。')) return;
+  busy = true;
+  try{
+    const j = await post('skip_del', kw);
+    toast((j.ok ? '操作已执行：' : '操作失败：') + (j.msg || ''));
+    if(j.ok && j.data) renderSkip(j.data);
+  }catch(e){ toast('操作失败：' + e.message); }
+  busy = false;
+  setTimeout(refresh, 500);
+}
+$('sk-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); skipAdd(); }
+});
 
 async function act(name, confirmFirst, arg){
   if(busy) return;

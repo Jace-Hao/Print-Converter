@@ -6,6 +6,8 @@
   2. 本地操作页面：http://127.0.0.1:8787/（仅本机可访问，零外部依赖）；
   3. 每日清理：归档 / 预览超过保留天数(默认 7 天)的文件自动删除。
 
+状态检测：虚拟打印机（app.vpinstall）+ 本机目标打印机（app.printerstatus，佳博 GP-9134T）。
+
 启动：pythonw -X utf8 -m app.console run   （后台静默运行，经「打开操作页面.cmd」拉起）
 停止：结束该进程（见「停止软件.cmd」）
 其它：python -m app.console status | url | open
@@ -16,6 +18,7 @@
 import argparse
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -31,7 +34,12 @@ BASE_PORT = 8787
 PORT_TRIES = 10
 CREATE_NO_WINDOW = 0x08000000
 APP_TITLE = "水洗唛打印助手"
-VERSION = "v2.1"
+VERSION = "v2.2"
+
+VP_CACHE_TTL = 30        # 虚拟打印机状态缓存秒数
+PRINTER_CACHE_TTL = 15   # 本机打印机状态缓存秒数（出纸状态变化快，缓存短一些）
+SKIP_KW_MAX_LEN = 30     # 单个不打印关键词最大字符数
+SKIP_KW_MAX_COUNT = 50   # 不打印关键词最多条数
 
 STATE = {}
 
@@ -80,7 +88,7 @@ def instance_running():
 def _vp_status_cached():
     now = time.time()
     cache = STATE.get("vp_cache")
-    if cache and now - cache[0] < 30:
+    if cache and now - cache[0] < VP_CACHE_TTL:
         return cache[1]
     from app import vpinstall
     try:
@@ -88,6 +96,24 @@ def _vp_status_cached():
     except Exception as e:
         st = {"error": str(e)}
     STATE["vp_cache"] = (now, st)
+    return st
+
+
+def _printer_status_cached(cfg):
+    """本机目标打印机状态（短 TTL 缓存；手动检测时清空缓存强制刷新）"""
+    now = time.time()
+    cache = STATE.get("printer_cache")
+    if cache and now - cache[0] < PRINTER_CACHE_TTL:
+        return cache[1]
+    from app import printerstatus
+    try:
+        st = printerstatus.status(cfg)
+    except Exception as e:
+        st = {"error": str(e), "level": "error", "ok": False,
+              "name": printerstatus.target_name(cfg), "installed": False,
+              "status_text": "检测失败", "jobs": 0, "port": "", "driver": "",
+              "checked_at": time.strftime("%H:%M:%S")}
+    STATE["printer_cache"] = (now, st)
     return st
 
 
@@ -102,10 +128,23 @@ def collect_status(cfg):
             "alive": bool(STATE.get("watcher") is not None),
             "dirs": list(cfg["watch"]["dirs"]),
         },
-        "vprinter": {}, "capture": {}, "recent": [], "log_tail": [],
+        "vprinter": {}, "printer": {}, "capture": {}, "recent": [], "log_tail": [],
+        "config_error": getattr(cfg, "load_error", "") or "",
+        "skip_print": {"enabled": True, "keywords": []},
     }
+    try:
+        sp = cfg.get("skip_print") or {}
+        kws = [str(k) for k in (sp.get("keywords") or []) if str(k)]
+        st["skip_print"] = {"enabled": bool(sp.get("enabled", True)), "keywords": kws}
+    except Exception:
+        pass
     st["rotate_dir"] = (cfg.get("pipeline") or {}).get("rotate_dir", "cw")
     st["vprinter"] = _vp_status_cached()
+    try:
+        st["printer"] = _printer_status_cached(cfg)
+    except Exception as e:
+        st["printer"] = {"error": str(e), "level": "error", "ok": False,
+                         "name": "", "installed": False, "status_text": "检测失败"}
     try:
         slot = (cfg.get("capture") or {}).get("slot_file", "spool\\capture.pdf")
         slotp = slot if os.path.isabs(slot) else os.path.join(cfg.root, slot)
@@ -142,11 +181,48 @@ def collect_status(cfg):
     return st
 
 
+def _skip_section(cfg):
+    """取 cfg 中的 skip_print 段（就地保证结构完整，使内存配置即时生效）。"""
+    sp = cfg.data.get("skip_print")
+    if not isinstance(sp, dict):
+        sp = {}
+        cfg.data["skip_print"] = sp
+    kws = sp.get("keywords")
+    if not isinstance(kws, list):
+        kws = []
+        sp["keywords"] = kws
+    sp["enabled"] = bool(sp.get("enabled", True))
+    return sp, kws
+
+
+def _skip_snapshot(cfg):
+    sp, kws = _skip_section(cfg)
+    return {"enabled": bool(sp.get("enabled", True)),
+            "keywords": [str(k) for k in kws]}
+
+
+def _norm_keyword(raw):
+    """规范化关键词：去首尾空白、去内部所有空白字符。"""
+    return re.sub(r"\s+", "", str(raw if raw is not None else ""))
+
+
+def _skip_save(cfg, sp, backup):
+    """写回 config.json；失败时把内存值回滚为 backup。返回 (ok, err)。"""
+    try:
+        cfg.save()
+        return True, ""
+    except Exception as e:
+        sp["enabled"] = backup["enabled"]
+        sp["keywords"] = list(backup["keywords"])
+        return False, str(e)
+
+
 def do_action(cfg, log, name, arg=None):
     from app import vpinstall
     if name == "calibrate":
         subprocess.Popen([_pythonw(), "-X", "utf8", "-m", "app.cli", "calibrate"],
-                         cwd=ROOT, creationflags=CREATE_NO_WINDOW)
+                         cwd=ROOT, creationflags=CREATE_NO_WINDOW,
+                         stdin=subprocess.DEVNULL)
         return {"ok": True, "msg": "已发送校准唛打印（两版，约 5 秒内出纸）"}
     if name == "open_dir":
         targets = {
@@ -183,6 +259,60 @@ def do_action(cfg, log, name, arg=None):
     if name == "vp_check":
         STATE["vp_cache"] = None
         return {"ok": True, "data": _vp_status_cached()}
+    if name == "printer_check":
+        STATE["printer_cache"] = None
+        data = _printer_status_cached(cfg)
+        return {"ok": True, "data": data,
+                "msg": "本机打印机「%s」：%s" % (data.get("name") or "?",
+                                          data.get("status_text") or "未知状态")}
+    if name == "skip_toggle":
+        sp, _kws = _skip_section(cfg)
+        backup = {"enabled": bool(sp.get("enabled", True)),
+                  "keywords": list(sp.get("keywords") or [])}
+        sp["enabled"] = not backup["enabled"]
+        ok, err = _skip_save(cfg, sp, backup)
+        if not ok:
+            return {"ok": False, "msg": "保存配置失败，已保持原状态: %s" % err}
+        log.info("关键词排除打印已%s（即时生效）", "启用" if sp["enabled"] else "停用")
+        return {"ok": True, "data": _skip_snapshot(cfg),
+                "msg": "关键词排除打印已%s，立即生效" % ("启用" if sp["enabled"] else "停用")}
+    if name == "skip_add":
+        kw = _norm_keyword(arg)
+        if not kw:
+            return {"ok": False, "msg": "请输入关键词（不能为空或全是空格）"}
+        if len(kw) > SKIP_KW_MAX_LEN:
+            return {"ok": False, "msg": "关键词过长：最多 %d 个字符（当前 %d 个）"
+                                        % (SKIP_KW_MAX_LEN, len(kw))}
+        sp, kws = _skip_section(cfg)
+        backup = {"enabled": bool(sp.get("enabled", True)), "keywords": list(kws)}
+        if any(str(k) == kw for k in kws):
+            return {"ok": False, "msg": "关键词「%s」已在列表中" % kw}
+        if len(kws) >= SKIP_KW_MAX_COUNT:
+            return {"ok": False, "msg": "关键词最多 %d 条，请先删除不再需要的条目"
+                                        % SKIP_KW_MAX_COUNT}
+        kws.append(kw)
+        ok, err = _skip_save(cfg, sp, backup)
+        if not ok:
+            return {"ok": False, "msg": "保存配置失败，已撤销添加: %s" % err}
+        log.info("新增不打印关键词「%s」（即时生效，共 %d 条）", kw, len(kws))
+        return {"ok": True, "data": _skip_snapshot(cfg),
+                "msg": "已添加「%s」，立即生效" % kw}
+    if name == "skip_del":
+        kw = _norm_keyword(arg)
+        if not kw:
+            return {"ok": False, "msg": "要删除的关键词为空"}
+        sp, kws = _skip_section(cfg)
+        backup = {"enabled": bool(sp.get("enabled", True)), "keywords": list(kws)}
+        hit = next((k for k in kws if str(k) == kw), None)
+        if hit is None:
+            return {"ok": False, "msg": "未找到关键词「%s」" % kw}
+        kws.remove(hit)
+        ok, err = _skip_save(cfg, sp, backup)
+        if not ok:
+            return {"ok": False, "msg": "保存配置失败，已撤销删除: %s" % err}
+        log.info("移除不打印关键词「%s」（即时生效，剩余 %d 条）", kw, len(kws))
+        return {"ok": True, "data": _skip_snapshot(cfg),
+                "msg": "已删除「%s」，立即生效" % kw}
     if name == "vp_install":
         cmd = os.path.join(ROOT, "安装虚拟打印机.cmd")
         if not os.path.exists(cmd):
@@ -193,6 +323,26 @@ def do_action(cfg, log, name, arg=None):
 
 
 # ---------------- HTTP 服务 ----------------
+def safe_status():
+    """/api/status 的总兜底：任一段取状态失败都只降级，绝不返回 500。"""
+    try:
+        return collect_status(STATE["cfg"])
+    except Exception as e:
+        return {
+            "ok": False, "app": APP_TITLE, "version": VERSION,
+            "now": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "started": STATE.get("started", ""), "port": STATE.get("port"),
+            "pid": os.getpid(),
+            "watcher": {"alive": bool(STATE.get("watcher") is not None), "dirs": []},
+            "vprinter": {}, "printer": {"error": str(e), "level": "error", "ok": False,
+                                        "name": "", "installed": False, "status_text": "检测失败"},
+            "capture": {}, "recent": [], "log_tail": [],
+            "config_error": "读取运行状态失败: %s" % e,
+            "skip_print": {"enabled": True, "keywords": []},
+            "error": str(e),
+        }
+
+
 def _page_path():
     return os.path.join(ROOT, "web", "操作页面.html")
 
@@ -201,7 +351,7 @@ def _make_handler():
     from http.server import BaseHTTPRequestHandler
 
     class Handler(BaseHTTPRequestHandler):
-        server_version = "WashLabelConsole/2.1"
+        server_version = "WashLabelConsole/2.2"
 
         def log_message(self, *a):
             pass
@@ -235,11 +385,12 @@ def _make_handler():
                 elif self.path == "/api/ping":
                     self._send(200, {"ok": True})
                 elif self.path == "/api/status":
-                    self._send(200, collect_status(STATE["cfg"]))
+                    self._send(200, safe_status())
                 else:
                     self._send(404, {"ok": False, "msg": "not found"})
             except Exception as e:
-                self._send(500, {"ok": False, "msg": str(e)})
+                self._send(200, {"ok": False, "app": APP_TITLE, "version": VERSION,
+                                 "error": str(e), "recent": [], "log_tail": []})
 
         def do_POST(self):
             try:
@@ -255,7 +406,8 @@ def _make_handler():
                 res = do_action(STATE["cfg"], STATE["log"], str(data.get("name")), data.get("arg"))
                 self._send(200, res)
             except Exception as e:
-                self._send(500, {"ok": False, "msg": str(e)})
+                # 操作失败也要回 200 + 中文提示，页面才能正常弹 toast
+                self._send(200, {"ok": False, "msg": "操作失败: %s" % e})
 
     return Handler
 
@@ -278,6 +430,9 @@ def _daily_cleanup_loop(cfg, log):
 
 def run(argv=None):
     cfg, log = _setup()
+    if getattr(cfg, "load_error", ""):
+        # 配置损坏也不能阻止启动：仅告警，服务与状态检测照常
+        log.warning("配置回退: %s", cfg.load_error)
     existing = find_instance()
     if existing:
         log.info("软件已在运行（端口 %s），本次启动被忽略。", existing)
@@ -330,7 +485,9 @@ def main(argv=None):
     # url / open：确保后台服务在运行
     if not p:
         subprocess.Popen([_pythonw(), "-X", "utf8", "-m", "app.console", "run"],
-                         cwd=ROOT, creationflags=CREATE_NO_WINDOW)
+                         cwd=ROOT, creationflags=CREATE_NO_WINDOW,
+                         stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for _ in range(60):
             time.sleep(0.4)
             p = find_instance()

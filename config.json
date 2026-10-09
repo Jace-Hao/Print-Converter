@@ -41,7 +41,7 @@
   },
   "pipeline": {
     "mode": "auto",
-    "rotate_dir": "cw",
+    "rotate_dir": "ccw",
     "canvas_mm": [
       30.0,
       120.0
@@ -76,7 +76,8 @@
       "布草",
       "洗涤服务",
       "窗帘",
-      "窗纱"
+      "窗纱",
+      "婚纱"
     ]
   },
   "paths": {

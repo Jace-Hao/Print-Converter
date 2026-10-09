@@ -28,12 +28,22 @@ def is_admin():
 CREATE_NO_WINDOW = 0x08000000  # 不弹出控制台窗口（Windows）
 
 
-def _ps(cmd, check=True):
-    p = subprocess.run(
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-         "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " + cmd],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-        creationflags=CREATE_NO_WINDOW)
+PS_TIMEOUT = 15  # PowerShell 单次调用最长等待秒数：打印后台处理程序/PowerShell 卡住时不拖死页面轮询
+
+
+def _ps(cmd, check=True, timeout=PS_TIMEOUT):
+    # stdin 显式置为 DEVNULL：pythonw 无控制台场景下子进程不会卡在等待输入
+    try:
+        p = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+             "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " + cmd],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            creationflags=CREATE_NO_WINDOW, stdin=subprocess.DEVNULL, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        # 超时按失败处理：安装类调用抛错提示用户，状态检测类调用返回空串由调用方兜底
+        if check:
+            raise RuntimeError("PowerShell 命令超时（%d 秒未返回）: %s" % (timeout, cmd[:80]))
+        return ""
     out = (p.stdout or "").strip()
     err = (p.stderr or "").strip()
     if check and p.returncode != 0:
@@ -68,6 +78,10 @@ def status():
         data = json.loads(_ps(cmd, check=False) or "{}")
     except Exception:
         data = {}
+    if not isinstance(data, dict):
+        data = {}
+    if "port_ok" not in data:  # PowerShell 无返回 / 超时：标记出来，避免被当成"确实未安装"
+        data["error"] = "虚拟打印机状态检测失败（PowerShell 无返回或超时 %d 秒）" % PS_TIMEOUT
     data.update({"name": name, "driver_name": driver, "port": port, "admin": is_admin()})
     return data
 

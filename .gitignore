@@ -15,6 +15,9 @@ backup/
 inbox/*
 !inbox/.gitkeep
 
+# 配置损坏时的自动备份（本地排查用，不随仓库发布）
+config.json.corrupt-*.bak
+
 # 内部与系统文件
 .openclaw/
 Thumbs.db

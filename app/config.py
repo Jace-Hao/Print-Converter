@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
-"""水洗唛打印助手 - 配置加载与保存"""
+"""水洗唛打印助手 - 配置加载与保存
+
+容错策略：config.json 损坏 / 非法 JSON / 非对象结构时，绝不抛异常中断启动，
+而是把损坏文件另存为 config.json.corrupt-<时间戳>.bak，再用 DEFAULTS 兜底继续运行，
+并把可读告警写入 self.load_error，供操作台提示用户"配置已回退"。
+"""
 import copy
 import json
 import os
+import shutil
+import time
 
 DEFAULTS = {
     "watch": {
@@ -84,11 +91,59 @@ class Config:
     def __init__(self, root):
         self.root = root
         self.path = os.path.join(root, "config.json")
-        data = {}
-        if os.path.exists(self.path):
-            with open(self.path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+        self.load_error = ""      # 配置加载异常的可读说明（空串 = 正常）
+        self.backup_path = ""     # 损坏配置的备份文件位置（空串 = 未备份）
+        data = self._load()
         self.data = _merge(DEFAULTS, data)
+
+    def _load(self):
+        """读取 config.json。任何异常都在此消化，返回可用的配置字典。"""
+        if not os.path.exists(self.path):
+            return {}
+        try:
+            with open(self.path, "r", encoding="utf-8") as f:
+                text = f.read()
+        except Exception as e:
+            self.load_error = "配置文件 config.json 读取失败（%s），本次已临时使用默认配置。" % e
+            return {}
+        if not text.strip():
+            # 与坏 JSON 口径一致：空文件也留一份 .corrupt-*.bak 备查，再用默认配置兜底
+            self.backup_path = self._backup_corrupt()
+            tail = ("已把空文件备份为 %s。" % self.backup_path) if self.backup_path else "（备份失败）"
+            self.load_error = ("配置文件 config.json 是空文件。%s本次已临时使用默认配置启动，"
+                               "在操作页面改动任意一项配置即会自动重写。" % tail)
+            return {}
+        try:
+            data = json.loads(text)
+        except Exception as e:
+            self.backup_path = self._backup_corrupt()
+            tail = ("已把损坏文件备份为 %s。" % self.backup_path) if self.backup_path else "（备份失败，原文件未被改动）"
+            self.load_error = ("配置文件 config.json 无法解析（%s）。%s本次已临时使用默认配置启动，"
+                               "服务与状态检测仍可正常使用；修正后重新打开操作页面即可生效。" % (e, tail))
+            return {}
+        if not isinstance(data, dict):
+            self.backup_path = self._backup_corrupt()
+            tail = ("已把损坏文件备份为 %s。" % self.backup_path) if self.backup_path else "（备份失败，原文件未被改动）"
+            self.load_error = ("配置文件 config.json 内容不是合法配置对象（解析出 %s）。%s"
+                               "本次已临时使用默认配置启动。" % (type(data).__name__, tail))
+            return {}
+        return data
+
+    def _backup_corrupt(self):
+        """把损坏的配置文件另存为 config.json.corrupt-<时间戳>.bak，返回备份路径。"""
+        dst = "%s.corrupt-%s.bak" % (self.path, time.strftime("%Y%m%d-%H%M%S"))
+        try:
+            shutil.copy2(self.path, dst)
+            return dst
+        except Exception:
+            pass
+        try:  # 复制失败时退化为改名，至少保住原内容
+            if os.path.exists(dst):
+                os.remove(dst)
+            os.replace(self.path, dst)
+            return dst
+        except Exception:
+            return ""
 
     def save(self):
         with open(self.path, "w", encoding="utf-8") as f:
